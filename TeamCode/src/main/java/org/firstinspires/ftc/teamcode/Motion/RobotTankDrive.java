@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Motion;
 
+import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.drive.TankDrive;
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints;
@@ -24,7 +25,7 @@ public class RobotTankDrive extends TankDrive {
     private static final int TRACK_WIDTH = 1; /// tune this
     private static final double WHEEL_RADIUS = 1.77;
     private static final double GEAR_RATIO = 72;
-    public static final PIDCoefficients NORMAL_VELOCITY_PID = new PIDCoefficients(20, 8, 12); // TUNE THIS !!!!!!
+    // public static final PIDCoefficients NORMAL_VELOCITY_PID = new PIDCoefficients(20, 8, 12); // TUNE THIS !!!!!!
     private BNO055IMU imu;
 
 
@@ -35,7 +36,7 @@ public class RobotTankDrive extends TankDrive {
     private double poseHeading;
     private double offsetHeading;
     private boolean initialized = false;
-
+    private Pose2d currPose;
     public RobotTankDrive(final HardwareMap hmap) {
         super(TRACK_WIDTH);
         this.hmap = hmap;
@@ -58,6 +59,8 @@ public class RobotTankDrive extends TankDrive {
         this.offsetHeading = 0;
 
     }
+
+
 
     @Override
     public List<Double> getWheelPositions() {
@@ -106,7 +109,7 @@ public class RobotTankDrive extends TankDrive {
         return new TrajectoryBuilder(getPoseEstimate(), constraints);
     }
 
-    public void updateHeading() {
+    public void update() {
         double angle = imu.getAngularOrientation().firstAngle;
         if (!initialized) {
             offsetHeading = Calculator.wrapAngleMinus(poseHeading, angle);
@@ -114,13 +117,16 @@ public class RobotTankDrive extends TankDrive {
         }
 
         poseHeading = Calculator.wrapAngle(offsetHeading, angle);
+        currPose = getPoseEstimate();
     }
+
+    public Pose2d getCurrentPos() { return currPose; }
 
     public double getPoseHeading() {
         return poseHeading;
     }
 
-    public double getAngleError(final double targetHeading) {
+    public double getHeadingError(final double targetHeading) {
         return targetHeading - getPoseHeading();
     }
 
