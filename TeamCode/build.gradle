@@ -13,3 +13,14 @@
 
 // Include common definitions from above.
 apply from: '../build.common.gradle'
+repositories {
+    // other repositories
+    jcenter()
+}
+
+dependencies {
+    // other dependencies
+    implementation 'com.acmerobotics.roadrunner:core:0.2.1'
+    implementation project(':openCVLibrary3')
+    implementation project(':endercv')
+}
