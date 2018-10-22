@@ -1,16 +1,16 @@
-package org.firstinspires.ftc.teamcode.Motion;
+/*package org.firstinspires.ftc.teamcode.Motion;
 
 import com.acmerobotics.roadrunner.Pose2d;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.robot.Robot;
 
-import org.firstinspires.ftc.teamcode.Calculator;
+import org.firstinspires.ftc.teamcode.Utils.Calculator;
 
 
 public class PID {
     private final double KI, KD, KP;
     private Pose2d posTarget;
     private double targetHeading;
+    private double prevError;
+    private double prevTime = 0;
     private static final double MAX_MOTOR_POWER = 0.7;
     private static final double MIN_MOTOR_POWER = 0.1;
 
@@ -28,17 +28,28 @@ public class PID {
         this.targetHeading = heading;
     }
 
-    public double getOutput(double runTime, final double prevError, final Pose2d currPos) {
-        double error = Calculator.euclideanDistance(posTarget, currPos);
-        double output = KP * error + KD * (error - prevError) / runTime;
+    public double getOutput(final double runTime, final Pose2d currPos) {
+        final double error = Calculator.euclideanDistance(posTarget, currPos);
+        final double output = KP * error + KD * (error - prevError) / (runTime - prevTime);
         if (output > MAX_MOTOR_POWER) return MAX_MOTOR_POWER;
         else if (output < MIN_MOTOR_POWER)return MIN_MOTOR_POWER;
+        prevError = error;
+        prevTime = runTime;
         return output;
     }
 
-    public double getHeadingError(final double currentHeading) {
-        return targetHeading - currentHeading;
+    public double getAngleOutput(final double runTime, final double currHeading) {
+        final double error = targetHeading - currHeading;
+        final double output =  KP * error + KD * (error - prevError) / (runTime - prevTime);
+        prevError = error;
+        prevTime = runTime;
+        return output;
     }
 
 
+
+
 }
+*/
+
+// Not being used atm. Instead we are using Road Runners PID controller

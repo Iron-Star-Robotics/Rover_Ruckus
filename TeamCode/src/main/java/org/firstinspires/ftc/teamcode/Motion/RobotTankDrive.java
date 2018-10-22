@@ -8,14 +8,11 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.motors.NeveRest20Gearmotor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDCoefficients;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
-import org.firstinspires.ftc.teamcode.Calculator;
+import org.firstinspires.ftc.teamcode.Utils.Calculator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class RobotTankDrive extends TankDrive {
@@ -37,6 +34,7 @@ public class RobotTankDrive extends TankDrive {
     private double offsetHeading;
     private boolean initialized = false;
     private Pose2d currPose;
+
     public RobotTankDrive(final HardwareMap hmap) {
         super(TRACK_WIDTH);
         this.hmap = hmap;
@@ -126,8 +124,6 @@ public class RobotTankDrive extends TankDrive {
         return poseHeading;
     }
 
-    public double getHeadingError(final double targetHeading) {
-        return targetHeading - getPoseHeading();
-    }
+
 
 }
