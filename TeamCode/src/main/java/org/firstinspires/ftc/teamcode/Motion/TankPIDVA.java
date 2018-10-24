@@ -5,8 +5,11 @@ import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.acmerobotics.roadrunner.control.PIDFController;
 import com.acmerobotics.roadrunner.drive.Kinematics;
 import com.acmerobotics.roadrunner.drive.TankDrive;
+import com.acmerobotics.roadrunner.drive.TankKinematics;
 import com.acmerobotics.roadrunner.followers.TrajectoryFollower;
 import com.acmerobotics.roadrunner.util.NanoClock;
+
+import java.util.List;
 
 public class TankPIDVA extends TrajectoryFollower {
 
@@ -40,10 +43,24 @@ public class TankPIDVA extends TrajectoryFollower {
 
         Pose2d targetRobotPose = Kinematics.fieldToRobotPose(targetPose);
         Pose2d targetRobotPoseVelocity = Kinematics.fieldToRobotPoseVelocity(targetPose, targetPoseVelocity);
-        Pose2d targetRobotAcceleration = Kinematics.fieldToRobotPoseAcceleration(targetPose, targetPoseVelocity, targetPoseAcceleration);
+        Pose2d targetRobotPoseAcceleration = Kinematics.fieldToRobotPoseAcceleration(targetPose, targetPoseVelocity, targetPoseAcceleration);
 
         Pose2d currentRobotPose = new Pose2d(currentPose.pos().rotated(-targetPose.getHeading()), currentPose.getHeading() - targetPose.getHeading());
-        
+
+        displacementController.setTargetPosition(targetRobotPose.getX());
+        crossTrackController.setTargetPosition(targetRobotPose.getY());
+
+        double axialCorrection = displacementController.update(currentRobotPose.getX(), targetRobotPoseVelocity.getX());
+        double headingCorrection = crossTrackController.update(currentRobotPose.getY(), targetRobotPoseVelocity.getHeading());
+
+        Pose2d correctedVelocity = targetPoseVelocity.plus(new Pose2d(axialCorrection, 0.0, headingCorrection));
+
+        List<Double> wheelVelocities = TankKinematics.robotToWheelVelocities(correctedVelocity, drive.getTrackWidth());
+        List<Double> wheelAccelerations = TankKinematics.robotToWheelAccelerations(targetRobotPoseAcceleration, drive.getTrackWidth());
+
+        List<Double> motorPowers = Kinematics.calculateMotorFeedforward(wheelVelocities, wheelAccelerations, kV, 0, 0);
+        drive.setMotorPowers((double) motorPowers.toArray()[0], (double) motorPowers.toArray()[1]);
+
 
     }
 
