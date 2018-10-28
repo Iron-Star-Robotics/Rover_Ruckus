@@ -2,13 +2,17 @@ package org.firstinspires.ftc.teamcode.Motion;
 
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.drive.TankDrive;
+import com.acmerobotics.roadrunner.followers.TrajectoryFollower;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.motors.NeveRest20Gearmotor;
+import com.qualcomm.hardware.motors.RevRoboticsCoreHexMotor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import org.firstinspires.ftc.teamcode.Utils.Calculator;
 
@@ -17,23 +21,25 @@ import java.util.List;
 
 public class RobotTankDrive extends TankDrive {
 
-    public static final MotorConfigurationType MOTOR_CONFIG = MotorConfigurationType.getMotorType(NeveRest20Gearmotor.class);
-    private static final double TICKS_PER_REV = MOTOR_CONFIG.getTicksPerRev();
+    public static final MotorConfigurationType MOTOR_CONFIG = MotorConfigurationType.getMotorType(RevRoboticsCoreHexMotor.class);
+    public static final double TICKS_PER_REV = MOTOR_CONFIG.getTicksPerRev();
     private static final int TRACK_WIDTH = 1; /// tune this
-    private static final double WHEEL_RADIUS = 1.77;
-    private static final double GEAR_RATIO = 72;
+    public static final double WHEEL_RADIUS = 1.77;
+    public static final double GEAR_RATIO = 72;
     // public static final PIDCoefficients NORMAL_VELOCITY_PID = new PIDCoefficients(20, 8, 12); // TUNE THIS !!!!!!
     private BNO055IMU imu;
 
 
     private DriveConstraints constraints;
     private DcMotorEx bl, br, fr, fl;
-    private List<DcMotorEx> motors;
+
     private HardwareMap hmap;
     private double poseHeading;
     private double offsetHeading;
     private boolean initialized = false;
     private Pose2d currPose;
+
+    private TrajectoryFollower follower;
 
     public RobotTankDrive(final HardwareMap hmap) {
         super(TRACK_WIDTH);
@@ -77,7 +83,8 @@ public class RobotTankDrive extends TankDrive {
     }
 
     @Override
-    public void setMotorPowers(final double leftPow, final double rightPow){
+    public void setMotorPowers(final
+                                   double leftPow, final double rightPow){
         bl.setPower(leftPow);
         //fl.setPower(leftPow);
         br.setPower(rightPow);
@@ -93,8 +100,8 @@ public class RobotTankDrive extends TankDrive {
         bl.setTargetPosition(fr.getCurrentPosition() + encoderDist);
     }
     public void gamepadDrive(final double gamepadX, final double gamepadY) {
-        bl.setPower(-gamepadY + gamepadX);
-        br.setPower(-gamepadY - gamepadX);
+        bl.setPower(gamepadY + gamepadX);
+        br.setPower(gamepadY - gamepadX);
         //fl.setPower(-gamepadY + gamepadX);
         //fr.setPower(-gamepadY - gamepadX);
     }
@@ -107,21 +114,34 @@ public class RobotTankDrive extends TankDrive {
         return new TrajectoryBuilder(getPoseEstimate(), constraints);
     }
 
-    public void update() {
-        double angle = imu.getAngularOrientation().firstAngle;
-        if (!initialized) {
-            offsetHeading = Calculator.wrapAngleMinus(poseHeading, angle);
-            initialized = true;
-        }
-
-        poseHeading = Calculator.wrapAngle(offsetHeading, angle);
-        currPose = getPoseEstimate();
+    public void setPIDFCoefficients(DcMotor.RunMode runMode, PIDFCoefficients coefficients) {
+        bl.setPIDFCoefficients(runMode, coefficients);
+        br.setPIDFCoefficients(runMode, coefficients);
     }
 
-    public Pose2d getCurrentPos() { return currPose; }
+    public PIDFCoefficients getPIDFCoefficients(DcMotor.RunMode runMode) {
+        return bl.getPIDFCoefficients(runMode);
+    }
 
-    public double getPoseHeading() {
-        return poseHeading;
+    public void followTrajectory(Trajectory trajectory) {
+        follower.followTrajectory(trajectory);
+    }
+
+    public void updateFollower() {
+        follower.update(getPoseEstimate());
+    }
+
+    public void update() {
+        updatePoseEstimate();
+        updateFollower();
+    }
+
+    public boolean isFollowingTrajectory() {
+        return follower.isFollowing();
+    }
+
+    public BNO055IMU getIMU() {
+        return imu;
     }
 
 

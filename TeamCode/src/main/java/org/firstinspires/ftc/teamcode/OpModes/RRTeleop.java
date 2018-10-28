@@ -4,16 +4,32 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Motion.RobotTankDrive;
+import org.firstinspires.ftc.teamcode.Subsystems.Intake;
 
 @TeleOp
 public class RRTeleop extends LinearOpMode {
     @Override
     public void runOpMode() {
         RobotTankDrive tank = new RobotTankDrive(hardwareMap);
-        double xMove, yMove = 0;
+        Intake intake = new Intake(hardwareMap);
+
         waitForStart();
         while (opModeIsActive()) {
-            tank.gamepadDrive(gamepad1.right_stick_x, gamepad1.left_stick_y);
+            tank.gamepadDrive(-gamepad1.left_stick_y, gamepad1.right_stick_x);
+            if (gamepad1.right_trigger >= .4) {
+                intake.pulseIn();
+            }
+
+            else if (gamepad1.left_trigger >= .4) {
+                intake.pulseOut();
+            }
+
+            else intake.off();
+
+            if (gamepad1.right_bumper) {
+                intake.armMove(.3);
+            } else if (gamepad1.left_bumper) { intake.armMove(-.3);};
+
         }
     }
 }
