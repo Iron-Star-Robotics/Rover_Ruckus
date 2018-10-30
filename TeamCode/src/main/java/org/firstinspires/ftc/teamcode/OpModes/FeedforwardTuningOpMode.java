@@ -26,12 +26,12 @@ import java.util.List;
  *      regression.
  */
 @Config
-@Autonomous(name="gay")
+@Autonomous(name="feedforward")
 public class FeedforwardTuningOpMode extends LinearOpMode {
     private static final double EPSILON = 1e-2;
 
-    public static final double MAX_POWER = 0.7;
-    public static final double DISTANCE = 100;
+    public static final double MAX_POWER = 1.0;
+    public static final double DISTANCE = 800;
 
     private static List<Double> numericalDerivative(List<Double> x, List<Double> y) {
         List<Double> deriv = new ArrayList<>();
@@ -114,10 +114,10 @@ public class FeedforwardTuningOpMode extends LinearOpMode {
 
             timeSamples.add(elapsedTime);
             powerSamples.add(power);
-            positionSamples.add((double) ((RobotTankDrive) drive).getWheelPositions().toArray()[0]); // the left wheel position and right wheel position should be the same
+            positionSamples.add(drive.getPoseEstimate().getX());
 
             drive.setVelocity(new Pose2d(power, 0.0, 0.0));
-            //drive.updatePoseEstimate();
+            drive.updatePoseEstimate();
         }
         drive.setVelocity(new Pose2d(0.0, 0.0, 0.0));
 

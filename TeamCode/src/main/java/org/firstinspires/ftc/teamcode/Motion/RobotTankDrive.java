@@ -11,6 +11,7 @@ import com.qualcomm.hardware.motors.NeveRest20Gearmotor;
 import com.qualcomm.hardware.motors.RevRoboticsCoreHexMotor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
@@ -19,13 +20,13 @@ import org.firstinspires.ftc.teamcode.Utils.Calculator;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RobotTankDrive extends TankDrive {
+public class RobotTankDrive extends RobotTankDriveBase {
 
     public static final MotorConfigurationType MOTOR_CONFIG = MotorConfigurationType.getMotorType(RevRoboticsCoreHexMotor.class);
     public static final double TICKS_PER_REV = MOTOR_CONFIG.getTicksPerRev();
-    private static final int TRACK_WIDTH = 1; /// tune this
+    private static final int TRACK_WIDTH = 18;
     public static final double WHEEL_RADIUS = 1.77;
-    public static final double GEAR_RATIO = 72;
+    public static final double GEAR_RATIO = MOTOR_CONFIG.getGearing();
     // public static final PIDCoefficients NORMAL_VELOCITY_PID = new PIDCoefficients(20, 8, 12); // TUNE THIS !!!!!!
     private BNO055IMU imu;
 
@@ -40,6 +41,8 @@ public class RobotTankDrive extends TankDrive {
     private Pose2d currPose;
 
     private TrajectoryFollower follower;
+    private static double kV = 0.045;
+    
 
     public RobotTankDrive(final HardwareMap hmap) {
         super(TRACK_WIDTH);
@@ -61,7 +64,8 @@ public class RobotTankDrive extends TankDrive {
         br.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         this.poseHeading = 0;
         this.offsetHeading = 0;
-
+        bl.setDirection(DcMotorSimple.Direction.FORWARD);
+        br.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
 
@@ -83,10 +87,11 @@ public class RobotTankDrive extends TankDrive {
     }
 
     @Override
-    public void setMotorPowers(final
-                                   double leftPow, final double rightPow){
+    public void setMotorPowers(final double leftPow, final double rightPow){
+
         bl.setPower(leftPow);
         //fl.setPower(leftPow);
+
         br.setPower(rightPow);
         //fr.setPower(rightPow);
     }
@@ -143,6 +148,12 @@ public class RobotTankDrive extends TankDrive {
     public BNO055IMU getIMU() {
         return imu;
     }
+
+    @Override
+    public double getExternalHeading() {
+        return imu.getAngularOrientation().firstAngle;
+    }
+
 
 
 

@@ -20,7 +20,7 @@ repositories {
 
 dependencies {
     // other dependencies
-    implementation 'com.acmerobotics.roadrunner:core:0.2.1'
+    implementation 'com.acmerobotics.roadrunner:core:0.2.2'
     implementation project(':openCVLibrary3')
     implementation project(':endercv')
 }
