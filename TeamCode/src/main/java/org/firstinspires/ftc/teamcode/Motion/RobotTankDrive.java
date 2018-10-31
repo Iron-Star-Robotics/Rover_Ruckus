@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.Utils.Calculator;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RobotTankDrive extends RobotTankDriveBase {
+public class RobotTankDrive extends TankDrive {
 
     public static final MotorConfigurationType MOTOR_CONFIG = MotorConfigurationType.getMotorType(RevRoboticsCoreHexMotor.class);
     public static final double TICKS_PER_REV = MOTOR_CONFIG.getTicksPerRev();
@@ -42,7 +42,6 @@ public class RobotTankDrive extends RobotTankDriveBase {
 
     private TrajectoryFollower follower;
     private static double kV = 0.045;
-    
 
     public RobotTankDrive(final HardwareMap hmap) {
         super(TRACK_WIDTH);
@@ -149,10 +148,12 @@ public class RobotTankDrive extends RobotTankDriveBase {
         return imu;
     }
 
+
     @Override
     public double getExternalHeading() {
-        return imu.getAngularOrientation().firstAngle;
+        return (double) imu.getAngularOrientation().firstAngle;
     }
+
 
 
 
