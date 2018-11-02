@@ -14,6 +14,9 @@ import org.openftc.revextensions2.RevBulkData;
 
 import java.util.Arrays;
 import java.util.List;
+/* The real deal */
+
+// Using some openftc stuff to boost performance, especially in rev hub interactions
 
 public class LeviathanTankDrive extends RobotTankDriveBase{
 
