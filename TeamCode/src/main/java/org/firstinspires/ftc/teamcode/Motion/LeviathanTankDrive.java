@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Motion;
 
+import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -54,13 +55,18 @@ public class LeviathanTankDrive extends RobotTankDriveBase{
     }
 
 
-    public PIDFCoefficients getPIDFCoefficients(DcMotor.RunMode runMode) {
-        return motors.get(0).getPIDFCoefficients(runMode);
+    @Override
+    public PIDCoefficients getPIDCoefficients(DcMotor.RunMode runMode) {
+        PIDFCoefficients coefficients = leftMotors.get(0).getPIDFCoefficients(runMode);
+        return new PIDCoefficients(coefficients.p, coefficients.i, coefficients.d);
     }
 
-    public void setPIDFCoefficients(DcMotor.RunMode runMode, PIDFCoefficients coefficients) {
-        for (ExpansionHubMotor motor : motors) {
-            motor.setPIDFCoefficients(runMode, coefficients);
+    @Override
+    public void setPIDCoefficients(DcMotor.RunMode runMode, PIDCoefficients coefficients) {
+        for (DcMotorEx motor : motors) {
+            motor.setPIDFCoefficients(runMode, new PIDFCoefficients(
+                    coefficients.kP, coefficients.kI, coefficients.kD, 1
+            ));
         }
     }
 

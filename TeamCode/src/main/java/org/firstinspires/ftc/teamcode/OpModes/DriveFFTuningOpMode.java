@@ -26,7 +26,7 @@ import java.util.List;
  *      regression.
  */
 @Config
-@Autonomous
+@Autonomous(name="feedforward")
 public class DriveFFTuningOpMode extends LinearOpMode {
     private static final double EPSILON = 1e-2;
 

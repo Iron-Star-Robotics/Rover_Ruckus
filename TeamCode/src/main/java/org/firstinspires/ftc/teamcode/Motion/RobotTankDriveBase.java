@@ -10,6 +10,7 @@ import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints;
 import com.acmerobotics.roadrunner.trajectory.constraints.TankConstraints;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 @Config
 public abstract class RobotTankDriveBase extends TankDrive {
@@ -52,4 +53,8 @@ public abstract class RobotTankDriveBase extends TankDrive {
     public Pose2d getFollowingError() {
         return follower.getLastError();
     }
+
+    public abstract PIDCoefficients getPIDCoefficients(DcMotor.RunMode runMode);
+
+    public abstract void setPIDCoefficients(DcMotor.RunMode runMode, PIDCoefficients coefficients);
 }

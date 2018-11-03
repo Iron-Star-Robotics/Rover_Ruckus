@@ -6,7 +6,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.Motion.RobotTankDrive;
 import org.firstinspires.ftc.teamcode.Subsystems.Intake;
 
-@TeleOp
+@TeleOp(name="RRTeleop")
+
 public class RRTeleop extends LinearOpMode {
     @Override
     public void runOpMode() {

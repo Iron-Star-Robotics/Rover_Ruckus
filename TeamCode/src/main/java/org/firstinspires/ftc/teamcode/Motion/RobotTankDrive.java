@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Motion;
 
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.acmerobotics.roadrunner.drive.TankDrive;
 import com.acmerobotics.roadrunner.followers.TrajectoryFollower;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
@@ -16,146 +17,98 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import org.firstinspires.ftc.teamcode.Utils.Calculator;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public class RobotTankDrive extends TankDrive {
+public class RobotTankDrive extends RobotTankDriveBase {
 
-    public static final MotorConfigurationType MOTOR_CONFIG = MotorConfigurationType.getMotorType(RevRoboticsCoreHexMotor.class);
-    public static final double TICKS_PER_REV = MOTOR_CONFIG.getTicksPerRev();
-    private static final int TRACK_WIDTH = 18;
-    public static final double WHEEL_RADIUS = 1.77;
-    public static final double GEAR_RATIO = MOTOR_CONFIG.getGearing();
-    // public static final PIDCoefficients NORMAL_VELOCITY_PID = new PIDCoefficients(20, 8, 12); // TUNE THIS !!!!!!
+    private List<DcMotorEx> motors, leftMotors, rightMotors;
     private BNO055IMU imu;
 
+    public RobotTankDrive(HardwareMap hardwareMap) {
+        super();
 
-    private DriveConstraints constraints;
-    private DcMotorEx bl, br, fr, fl;
-
-    private HardwareMap hmap;
-    private double poseHeading;
-    private double offsetHeading;
-    private boolean initialized = false;
-    private Pose2d currPose;
-
-    private TrajectoryFollower follower;
-    private static double kV = 0.045;
-
-    public RobotTankDrive(final HardwareMap hmap) {
-        super(TRACK_WIDTH);
-        this.hmap = hmap;
-
-        bl = (DcMotorEx) hmap.dcMotor.get("bl");
-        br = (DcMotorEx) hmap.dcMotor.get("br");
-        imu = hmap.get(BNO055IMU.class, "imu");
-
+        // TODO: adjust the names of the following hardware devices to match your configuration
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
         imu.initialize(parameters);
-        // fl = (DcMotorEx) hmap.dcMotor.get("fl");
-        // fr = (DcMotorEx) hmap.dcMotor.get("fr");
 
-        bl.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        bl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        br.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        br.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        this.poseHeading = 0;
-        this.offsetHeading = 0;
-        bl.setDirection(DcMotorSimple.Direction.FORWARD);
-        br.setDirection(DcMotorSimple.Direction.REVERSE);
+        // add/remove motors depending on your robot (e.g., 6WD)
+        //DcMotorEx leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
+        DcMotorEx leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
+        DcMotorEx rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
+        //DcMotorEx rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
+
+        motors = Arrays.asList(leftRear, rightRear);
+        leftMotors = Arrays.asList(leftRear);
+        rightMotors = Arrays.asList(rightRear);
+
+        for (DcMotorEx motor : motors) {
+            // TODO: decide whether or not to use the built-in velocity PID
+            // if you keep it, then don't tune kStatic or kA
+            // otherwise, comment out the following line
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
+
+        // TODO: reverse any motors using DcMotor.setDirection()
     }
 
+    @Override
+    public PIDCoefficients getPIDCoefficients(DcMotor.RunMode runMode) {
+        PIDFCoefficients coefficients = leftMotors.get(0).getPIDFCoefficients(runMode);
+        return new PIDCoefficients(coefficients.p, coefficients.i, coefficients.d);
+    }
 
+    @Override
+    public void setPIDCoefficients(DcMotor.RunMode runMode, PIDCoefficients coefficients) {
+        for (DcMotorEx motor : motors) {
+            motor.setPIDFCoefficients(runMode, new PIDFCoefficients(
+                    coefficients.kP, coefficients.kI, coefficients.kD, 1
+            ));
+        }
+    }
 
+    @NotNull
     @Override
     public List<Double> getWheelPositions() {
-        List<Double> wheelPositions = new ArrayList<>();
-
-        wheelPositions.add(encoderTicksToInches(bl.getCurrentPosition()));
-        wheelPositions.add(encoderTicksToInches(br.getCurrentPosition()));
-        //wheelPositions.add(encoderTicksToInches(fl.getCurrentPosition()));
-        //wheelPositions.add(encoderTicksToInches(fr.getCurrentPosition()));
-
-        return wheelPositions;
-    }
-
-    public static double encoderTicksToInches(final int ticks) {
-        return 2 * 2 * Math.PI * 1.0 * ticks / TICKS_PER_REV;
+        double leftSum = 0, rightSum = 0;
+        for (DcMotorEx leftMotor : leftMotors) {
+            leftSum += DriveConstants.encoderTicksToInches(leftMotor.getCurrentPosition());
+        }
+        for (DcMotorEx rightMotor : rightMotors) {
+            rightSum += DriveConstants.encoderTicksToInches(rightMotor.getCurrentPosition());
+        }
+        return Arrays.asList(leftSum / leftMotors.size(), rightSum / rightMotors.size());
     }
 
     @Override
-    public void setMotorPowers(final double leftPow, final double rightPow){
-
-        bl.setPower(leftPow);
-        //fl.setPower(leftPow);
-
-        br.setPower(rightPow);
-        //fr.setPower(rightPow);
+    public void setMotorPowers(double v, double v1) {
+        for (DcMotorEx leftMotor : leftMotors) {
+            leftMotor.setPower(v);
+        }
+        for (DcMotorEx rightMotor : rightMotors) {
+            rightMotor.setPower(v1);
+        }
     }
-
-    public void runWithEncoder(final double distance, final double power) {
-        final int encoderDist = 1; // do something to change from inches to encoder tihngy
-        setMotorPowers(power, power);
-        fr.setTargetPosition(fr.getCurrentPosition() + encoderDist);
-        fl.setTargetPosition(fl.getCurrentPosition() + encoderDist);
-        br.setTargetPosition(br.getCurrentPosition() + encoderDist);
-        bl.setTargetPosition(fr.getCurrentPosition() + encoderDist);
-    }
-    public void gamepadDrive(final double gamepadX, final double gamepadY) {
-        bl.setPower(gamepadY + gamepadX);
-        br.setPower(gamepadY - gamepadX);
-        //fl.setPower(-gamepadY + gamepadX);
-        //fr.setPower(-gamepadY - gamepadX);
-    }
-
-    private void setDriveConstraints(final double maxVeloctiy, final double maxAcceleration) {
-        this.constraints = new DriveConstraints(maxVeloctiy, maxAcceleration, 0, 0);
-    }
-
-    public TrajectoryBuilder trajectoryBuilder() {
-        return new TrajectoryBuilder(getPoseEstimate(), constraints);
-    }
-
-    public void setPIDFCoefficients(DcMotor.RunMode runMode, PIDFCoefficients coefficients) {
-        bl.setPIDFCoefficients(runMode, coefficients);
-        br.setPIDFCoefficients(runMode, coefficients);
-    }
-
-    public PIDFCoefficients getPIDFCoefficients(DcMotor.RunMode runMode) {
-        return bl.getPIDFCoefficients(runMode);
-    }
-
-    public void followTrajectory(Trajectory trajectory) {
-        follower.followTrajectory(trajectory);
-    }
-
-    public void updateFollower() {
-        follower.update(getPoseEstimate());
-    }
-
-    public void update() {
-        updatePoseEstimate();
-        updateFollower();
-    }
-
-    public boolean isFollowingTrajectory() {
-        return follower.isFollowing();
-    }
-
-    public BNO055IMU getIMU() {
-        return imu;
-    }
-
 
     @Override
     public double getExternalHeading() {
-        return (double) imu.getAngularOrientation().firstAngle;
+        return imu.getAngularOrientation().firstAngle;
     }
 
-
-
+    public void gamepadDrive(final double gamepadX, final double gamepadY) {
+        for (DcMotorEx leftMotor : leftMotors) {
+            leftMotor.setPower(gamepadY + gamepadX);
+        }
+        for (DcMotorEx rightMotor : rightMotors) {
+            rightMotor.setPower(gamepadY - gamepadX);
+        }
+    }
 
 
 }
