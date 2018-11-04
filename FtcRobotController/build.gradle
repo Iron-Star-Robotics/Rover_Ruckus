@@ -24,4 +24,11 @@ repositories {
     }
 }
 
+dependencies {
+    // other dependencies
+    implementation project(':openCVLibrary3')
+
+    compile 'org.openftc:rev-extensions-2:1.0'
+}
+
 apply from: 'build.release.gradle'

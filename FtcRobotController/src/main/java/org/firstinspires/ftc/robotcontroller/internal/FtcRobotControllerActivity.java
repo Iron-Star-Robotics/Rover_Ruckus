@@ -50,6 +50,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -119,15 +120,22 @@ import org.firstinspires.ftc.robotcore.internal.ui.UILocation;
 import org.firstinspires.ftc.robotcore.internal.webserver.RobotControllerWebInfo;
 import org.firstinspires.ftc.robotcore.internal.webserver.WebServer;
 import org.firstinspires.inspection.RcInspectionActivity;
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 
 @SuppressWarnings("WeakerAccess")
 public class FtcRobotControllerActivity extends Activity
   {
+
   public static final String TAG = "RCActivity";
   public String getTag() { return TAG; }
+
+
 
   private static final int REQUEST_CONFIG_WIFI_CHANNEL = 1;
   private static final int NUM_GAMEPADS = 2;
@@ -338,6 +346,9 @@ public class FtcRobotControllerActivity extends Activity
       initWifiMute(true);
     }
     FtcDashboard.start();
+
+
+
   }
 
   protected UpdateUI createUpdateUI() {
@@ -718,4 +729,5 @@ public class FtcRobotControllerActivity extends Activity
       wifiMuteStateMachine.consumeEvent(WifiMuteEvent.USER_ACTIVITY);
     }
   }
+
 }

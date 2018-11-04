@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode.Vision;
 
+
+import com.disnodeteam.dogecv.OpenCVPipeline;
+import com.disnodeteam.dogecv.detectors.DogeCVDetector;
+
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
@@ -32,27 +36,35 @@ public class GoldDetector {
 
     private Size initSize;
     private final Size DOWNSCALED_SIZE = new Size(640, 480);
+    public double alignPosOffset  = 0;    // How far from center frame is aligned
+    public double alignSize       = 100;
+
+    public GoldDetector() {
+
+    }
 
     public Mat process(Mat input) {
-
-        initSize = input.size();
+        input.copyTo(displayMat);
         input.copyTo(workingMat);
-
         input.release();
 
-        Imgproc.resize(workingMat, workingMat, DOWNSCALED_SIZE);
 
-        Imgproc.GaussianBlur(workingMat, workingMat, new Size(5,5), 0);
+        //Preprocess the working Mat (blur it then apply a yellow filter)
+        Imgproc.GaussianBlur(workingMat,workingMat,new Size(5,5),0);
         yellowFilter.process(workingMat.clone(), yellowMask);
 
-        List<MatOfPoint> yellowContours = new ArrayList<>();
-        Imgproc.findContours(yellowMask, yellowContours, hiarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-        Imgproc.drawContours(workingMat, yellowContours, -1, new Scalar(230, 70,70));
+        //Find contours of the yellow mask and draw them to the display mat for viewing
 
+        List<MatOfPoint> contoursYellow = new ArrayList<>();
+        Imgproc.findContours(yellowMask, contoursYellow, hiarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.drawContours(displayMat,contoursYellow,-1,new Scalar(230,70,70),2);
+
+        // Current result
         Rect bestRect = null;
         double maxArea = 0;
-        for (MatOfPoint cont: yellowContours) {
-            // Get bounding rectangle
+
+        // Loop through the contours and score them, searching for the best result
+        for(MatOfPoint cont : contoursYellow){
             double area = VisionUtils.calculateArea(cont);
             Rect rect = Imgproc.boundingRect(cont);
             Imgproc.rectangle(workingMat, rect.tl(), rect.br(), new Scalar(0,0,255), 2);
@@ -61,48 +73,79 @@ public class GoldDetector {
                 maxArea = area;
                 bestRect = rect;
             }
-
         }
 
-        double alignX = (DOWNSCALED_SIZE.width / 2) + ALIGNMENT_OFFSET; // Center point in X Pixels
-        double alignXMin = alignX - (ALIGN_SIZE / 2); // min xpos in pixel
-        double alignXMax = alignX + (ALIGN_SIZE / 2);
-        double xPos; // current gold xpos
+        // Vars to calculate the alignment logic.
+        double alignX    = (getAdjustedSize().width / 2) + alignPosOffset; // Center point in X Pixels
+        double alignXMin = alignX - (alignSize / 2); // Min X Pos in pixels
+        double alignXMax = alignX +(alignSize / 2); // Max X pos in pixels
+        double xPos; // Current Gold X Pos
 
-        if (bestRect != null) {
-            Imgproc.rectangle(displayMat, bestRect.tl(), bestRect.br(), new Scalar(255,0,0), 4);
-            // Imgproc.putText(displayMat, )
+        if(bestRect != null){
+            // Show chosen result
+            Imgproc.rectangle(displayMat, bestRect.tl(), bestRect.br(), new Scalar(255,0,0),4);
+            Imgproc.putText(displayMat, "Chosen", bestRect.tl(),0,1,new Scalar(255,255,255));
 
+            // Set align X pos
             xPos = bestRect.x + (bestRect.width / 2);
             goldXPos = xPos;
 
-            // Draw cetner point
-            Imgproc.circle(displayMat, new Point(xPos, bestRect.y + (bestRect.height / 2)), 5, new Scalar(0,255,0), 2);
+            // Draw center point
+            Imgproc.circle(displayMat, new Point( xPos, bestRect.y + (bestRect.height / 2)), 5, new Scalar(0,255,0),2);
 
-            // check if the mineral is aliged (DogeCV alg)
-            if (xPos < alignXMax && xPos > alignXMin)
+            // Check if the mineral is aligned
+            if(xPos < alignXMax && xPos > alignXMin){
                 aligned = true;
-            else aligned = false;
+            }else{
+                aligned = false;
+            }
 
-            // Draw the current X
-            Imgproc.putText(displayMat, "Current X: " + bestRect.x, new Point(10, DOWNSCALED_SIZE.height - 10), 0,0.5,new Scalar(255,255,255), 1);
+            // Draw Current X
+            Imgproc.putText(displayMat,"Current X: " + bestRect.x,new Point(10,getAdjustedSize().height - 10),0,0.5, new Scalar(255,255,255),1);
             found = true;
-
-        }
-        else {
-            aligned = false;
+        }else{
             found = false;
+            aligned = false;
         }
 
-        Imgproc.putText(displayMat, "result: " + aligned, new Point(10, DOWNSCALED_SIZE.height - 30), 0, 1, new Scalar(255,255,0), 1);
+        //Print result
+        Imgproc.putText(displayMat,"Result: " + aligned,new Point(10,getAdjustedSize().height - 30),0,1, new Scalar(255,255,0),1);
+
 
         return displayMat;
 
     }
 
+
     public boolean isAligned() {
         return aligned;
     }
+
+    public Size getAdjustedSize() {
+        return DOWNSCALED_SIZE;
+    }
+
+    public Mat processFrame(Mat rgba, Mat gray) {
+        initSize = rgba.size();
+        rgba.copyTo(workingMat);
+
+        if(workingMat.empty()){
+            return rgba;
+        }
+
+        Imgproc.resize(workingMat, workingMat,DOWNSCALED_SIZE); // Downscale
+        Imgproc.resize(process(workingMat),workingMat,getInitSize()); // Process and scale back to original size for viewing
+        //Print Info
+        //Imgproc.putText(workingMat,"DogeCV 2018.2 " + detectorName + ": " + getAdjustedSize().toString() + " - " + speed.toString() ,new Point(5,30),0,0.5,new Scalar(0,255,255),2);
+
+        return workingMat;
+    }
+
+    public Size getInitSize() {
+        return initSize;
+    }
+
+
 
 
 }
