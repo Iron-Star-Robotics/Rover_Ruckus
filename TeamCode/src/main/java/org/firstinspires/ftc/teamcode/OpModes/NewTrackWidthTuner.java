@@ -36,8 +36,6 @@ public class NewTrackWidthTuner extends LinearOpMode {
     public static int NUM_TRIALS = 5;
 
 
-
-
     @Override
     public void runOpMode() throws InterruptedException {
         RobotTankDriveBase drive = new RobotTankDrive(hardwareMap);

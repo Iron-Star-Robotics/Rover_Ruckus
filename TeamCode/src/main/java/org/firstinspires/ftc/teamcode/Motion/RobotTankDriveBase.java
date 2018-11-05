@@ -33,6 +33,10 @@ public abstract class RobotTankDriveBase extends TankDrive {
         return new TrajectoryBuilder(getPoseEstimate(), constraints);
     }
 
+    public void robotTurn(double radians) {
+        this.followTrajectory(this.trajectoryBuilder().turn(radians).build());
+    }
+
     public void followTrajectory(Trajectory trajectory) {
         follower.followTrajectory(trajectory);
     }

@@ -39,8 +39,8 @@ public class RobotTankDrive extends RobotTankDriveBase {
 
         // add/remove motors depending on your robot (e.g., 6WD)
         //DcMotorEx leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-        DcMotorEx leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
-        DcMotorEx rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
+        DcMotorEx leftRear = hardwareMap.get(DcMotorEx.class, "bl");
+        DcMotorEx rightRear = hardwareMap.get(DcMotorEx.class, "br");
         //DcMotorEx rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
 
         motors = Arrays.asList(leftRear, rightRear);
@@ -55,7 +55,10 @@ public class RobotTankDrive extends RobotTankDriveBase {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
 
+        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
+
         // TODO: reverse any motors using DcMotor.setDirection()
+        // .08841
     }
 
     @Override
@@ -109,6 +112,8 @@ public class RobotTankDrive extends RobotTankDriveBase {
             rightMotor.setPower(gamepadY - gamepadX);
         }
     }
+
+
 
 
 }

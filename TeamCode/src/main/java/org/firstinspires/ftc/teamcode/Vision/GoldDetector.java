@@ -21,7 +21,7 @@ import java.util.List;
  * Created by Ben on 10/7/18
 */
 
-public class GoldDetector {
+public class GoldDetector extends OpenCVPipeline { // here we are using the endercv module from DogeCv to make a cusotm detector
 
     private ColorFilter yellowFilter = new ColorFilter();
     private Mat workingMat = new Mat();
@@ -38,6 +38,13 @@ public class GoldDetector {
     private final Size DOWNSCALED_SIZE = new Size(640, 480);
     public double alignPosOffset  = 0;    // How far from center frame is aligned
     public double alignSize       = 100;
+    public enum MINERAL_POS {
+        LEFT,
+        CENTER,
+        RIGHT
+    }
+
+    private MINERAL_POS mineralPos;
 
     public GoldDetector() {
 
@@ -95,9 +102,18 @@ public class GoldDetector {
 
             // Check if the mineral is aligned
             if(xPos < alignXMax && xPos > alignXMin){
+                mineralPos = MINERAL_POS.CENTER;
                 aligned = true;
             }else{
                 aligned = false;
+            }
+
+            if (!aligned) {
+                if (xPos < alignXMin) {
+                    mineralPos = MINERAL_POS.LEFT;
+                } else {
+                    mineralPos = MINERAL_POS.RIGHT;
+                }
             }
 
             // Draw Current X
@@ -144,6 +160,11 @@ public class GoldDetector {
     public Size getInitSize() {
         return initSize;
     }
+
+    public MINERAL_POS getMineralPos() { return mineralPos; }
+
+
+
 
 
 

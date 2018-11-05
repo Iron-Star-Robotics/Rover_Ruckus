@@ -9,6 +9,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.robotcore.internal.system.Misc;
 import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
 import org.firstinspires.ftc.teamcode.Motion.LeviathanTankDrive;
+import org.firstinspires.ftc.teamcode.Motion.RobotTankDrive;
+import org.firstinspires.ftc.teamcode.Motion.RobotTankDriveBase;
 import org.firstinspires.ftc.teamcode.Utils.TuningUtil;
 
 import java.util.ArrayList;
@@ -35,7 +37,7 @@ public class DriveFFTuningOpMode extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        LeviathanTankDrive drive = new LeviathanTankDrive(hardwareMap);
+        RobotTankDriveBase drive = new RobotTankDrive(hardwareMap);
 
         NanoClock clock = NanoClock.system();
 

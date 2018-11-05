@@ -1,11 +1,17 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import com.acmerobotics.roadrunner.drive.TankDrive;
 import com.disnodeteam.dogecv.CameraViewDisplay;
 import com.disnodeteam.dogecv.DogeCV;
 import com.disnodeteam.dogecv.detectors.roverrukus.GoldAlignDetector;
 import com.disnodeteam.dogecv.detectors.roverrukus.SamplingOrderDetector;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ThreadPool;
+
+import org.firstinspires.ftc.teamcode.Motion.RobotTankDrive;
+
+import java.util.concurrent.ExecutorService;
 
 
 @TeleOp(name="GoldAlign Example", group="DogeCV")
@@ -15,6 +21,11 @@ public class RRAuto extends OpMode
     // Detector object
     private GoldAlignDetector detector;
 
+    private ExecutorService frameConsumerExecutor;
+    private TankDrive drive;
+    private double offsetHeading;
+    // Temporary autonomous opmode using dogecv
+    // We will replace this before the next qualifier with our custom vision api
 
     @Override
     public void init() {
@@ -37,7 +48,16 @@ public class RRAuto extends OpMode
         detector.ratioScorer.weight = 5; //
         detector.ratioScorer.perfectRatio = 1.0; // Ratio adjustment
 
-        detector.enable(); // Start the detector!
+
+        frameConsumerExecutor = ThreadPool.newSingleThreadExecutor("frame stuff");
+        frameConsumerExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                detector.enable();
+            }
+        });
+        //drive = new RobotTankDrive(hardwareMap);
+
 
 
     }
@@ -47,6 +67,7 @@ public class RRAuto extends OpMode
      */
     @Override
     public void init_loop() {
+
     }
 
     /*
@@ -54,7 +75,8 @@ public class RRAuto extends OpMode
      */
     @Override
     public void start() {
-
+        // lower the lift
+        //ffsetHeading = drive.getExternalHeading();
     }
 
     /*
@@ -64,6 +86,10 @@ public class RRAuto extends OpMode
     public void loop() {
         telemetry.addData("IsAligned" , detector.getAligned()); // Is the bot aligned with the gold mineral?
         telemetry.addData("X Pos" , detector.getXPosition()); // Gold X position.
+
+        if (detector.getAligned()) {
+
+        }
     }
 
     /*
