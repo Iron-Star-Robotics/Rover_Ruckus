@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveBase;
 import org.firstinspires.ftc.teamcode.Utils.LynxOptimizedI2cFactory;
 import org.jetbrains.annotations.NotNull;
 import org.openftc.revextensions2.ExpansionHubEx;
@@ -19,7 +20,7 @@ import java.util.List;
 
 // Using some openftc stuff to boost performance, especially in rev hub interactions
 
-public class LeviathanTankDrive extends RobotTankDriveBase{
+public class LeviathanTankDrive extends RobotTankDriveBase {
 
     private ExpansionHubEx hub;
     private List<ExpansionHubMotor> motors, leftMotors, rightMotors;

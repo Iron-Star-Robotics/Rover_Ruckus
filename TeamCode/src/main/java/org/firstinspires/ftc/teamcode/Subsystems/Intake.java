@@ -6,8 +6,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.Utils.Calculator;
 
+import java.util.Map;
 
-public class Intake {
+
+public class Intake extends Subsystem {
     private final HardwareMap hmap;
     private final DcMotorEx intakeMotor, armMotor;
     private static final double MOTOR_POWER = 0.8;
@@ -48,6 +50,8 @@ public class Intake {
         }
         armMotor.setPower(power);
     }
+
+    public Map<String, Object> update() {return null;}
 
 
 

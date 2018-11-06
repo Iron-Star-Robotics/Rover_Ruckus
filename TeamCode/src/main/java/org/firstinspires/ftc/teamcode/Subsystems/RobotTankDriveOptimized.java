@@ -1,4 +1,5 @@
-package org.firstinspires.ftc.teamcode.Motion;
+package org.firstinspires.ftc.teamcode.Subsystems;
+
 
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.qualcomm.hardware.bosch.BNO055IMU;
@@ -8,45 +9,58 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
-import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveBase;
+import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
+import org.firstinspires.ftc.teamcode.Utils.LynxOptimizedI2cFactory;
 import org.jetbrains.annotations.NotNull;
+import org.openftc.revextensions2.ExpansionHubEx;
+import org.openftc.revextensions2.ExpansionHubMotor;
+import org.openftc.revextensions2.RevBulkData;
+import org.openftc.revextensions2.RevExtensions2;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class RobotTankDrive extends RobotTankDriveBase {
+// optimized drive train class
+// reduces loop times by half by cutting down unnecessary overhead in rev bulk reads
 
-    private List<DcMotorEx> motors, leftMotors, rightMotors;
+public class RobotTankDriveOptimized extends RobotTankDriveBase {
+
+    private ExpansionHubEx hub;
+    private List<ExpansionHubMotor> motors, leftMotors, rightMotors;
     private BNO055IMU imu;
 
-    public RobotTankDrive(HardwareMap hardwareMap) {
+    public RobotTankDriveOptimized(HardwareMap hardwareMap) {
         super();
+        RevExtensions2.init();
 
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        hub = hardwareMap.get(ExpansionHubEx.class, "hub");
+
+        imu = LynxOptimizedI2cFactory.createLynxEmbeddedImu(hub.getStandardModule(), 0);
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
         imu.initialize(parameters);
 
         //DcMotorEx leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-        DcMotorEx leftRear = hardwareMap.get(DcMotorEx.class, "bl");
-        DcMotorEx rightRear = hardwareMap.get(DcMotorEx.class, "br");
+        ExpansionHubMotor leftRear = hardwareMap.get(ExpansionHubMotor.class, "leftRear");
+        ExpansionHubMotor rightRear = hardwareMap.get(ExpansionHubMotor.class, "rightRear");
         //DcMotorEx rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
 
         motors = Arrays.asList(leftRear, rightRear);
         leftMotors = Arrays.asList(leftRear);
         rightMotors = Arrays.asList(rightRear);
 
-        for (DcMotorEx motor : motors) {
+        for (ExpansionHubMotor motor : motors) {
             // TODO: decide whether or not to use the built-in velocity PID
-            // if you keep it, then don't tune kStatic or kA
+            // if we keep it, DO RUN_WITH_ENCODER
             // otherwise, comment out the following line
+            // atm we plan to use built in pid
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
 
         rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        // TODO: reverse any motors using DcMotor.setDirection()
+        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
         // .08841
     }
 
@@ -69,21 +83,22 @@ public class RobotTankDrive extends RobotTankDriveBase {
     @Override
     public List<Double> getWheelPositions() {
         double leftSum = 0, rightSum = 0;
+        RevBulkData bulkData = hub.getBulkInputData();
         for (DcMotorEx leftMotor : leftMotors) {
-            leftSum += DriveConstants.encoderTicksToInches(leftMotor.getCurrentPosition());
+            leftSum += DriveConstants.encoderTicksToInches(bulkData.getMotorCurrentPosition(leftMotor));
         }
         for (DcMotorEx rightMotor : rightMotors) {
-            rightSum += DriveConstants.encoderTicksToInches(rightMotor.getCurrentPosition());
+            rightSum += DriveConstants.encoderTicksToInches(bulkData.getMotorCurrentPosition(rightMotor));
         }
         return Arrays.asList(leftSum / leftMotors.size(), rightSum / rightMotors.size());
     }
 
     @Override
     public void setMotorPowers(double v, double v1) {
-        for (DcMotorEx leftMotor : leftMotors) {
+        for (ExpansionHubMotor leftMotor : leftMotors) {
             leftMotor.setPower(v);
         }
-        for (DcMotorEx rightMotor : rightMotors) {
+        for (ExpansionHubMotor rightMotor : rightMotors) {
             rightMotor.setPower(v1);
         }
     }
@@ -93,11 +108,12 @@ public class RobotTankDrive extends RobotTankDriveBase {
         return imu.getAngularOrientation().firstAngle;
     }
 
-    public void gamepadDrive(final double gamepadX, final double gamepadY) {
-        for (DcMotorEx leftMotor : leftMotors) {
+
+    public void gamepadDrive(double gamepadX, double gamepadY) {
+        for (ExpansionHubMotor leftMotor : leftMotors) {
             leftMotor.setPower(gamepadY + gamepadX);
         }
-        for (DcMotorEx rightMotor : rightMotors) {
+        for (ExpansionHubMotor rightMotor : rightMotors) {
             rightMotor.setPower(gamepadY - gamepadX);
         }
     }

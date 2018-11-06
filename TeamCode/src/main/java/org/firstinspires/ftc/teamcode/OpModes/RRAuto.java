@@ -1,15 +1,14 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
-import com.acmerobotics.roadrunner.drive.TankDrive;
 import com.disnodeteam.dogecv.CameraViewDisplay;
 import com.disnodeteam.dogecv.DogeCV;
 import com.disnodeteam.dogecv.detectors.roverrukus.GoldAlignDetector;
-import com.disnodeteam.dogecv.detectors.roverrukus.SamplingOrderDetector;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ThreadPool;
 
-import org.firstinspires.ftc.teamcode.Motion.RobotTankDrive;
+import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveBase;
+import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveOptimized;
 
 import java.util.concurrent.ExecutorService;
 
@@ -22,7 +21,7 @@ public class RRAuto extends OpMode
     private GoldAlignDetector detector;
 
     private ExecutorService frameConsumerExecutor;
-    private TankDrive drive;
+    private RobotTankDriveBase drive;
     private double offsetHeading;
     // Temporary autonomous opmode using dogecv
     // We will replace this before the next qualifier with our custom vision api
@@ -56,7 +55,7 @@ public class RRAuto extends OpMode
                 detector.enable();
             }
         });
-        //drive = new RobotTankDrive(hardwareMap);
+        drive = new RobotTankDriveOptimized(hardwareMap);
 
 
 
