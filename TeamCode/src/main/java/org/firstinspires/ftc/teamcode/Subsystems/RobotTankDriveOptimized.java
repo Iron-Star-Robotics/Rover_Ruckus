@@ -1,6 +1,10 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.canvas.Canvas;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -10,7 +14,9 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
+import org.firstinspires.ftc.teamcode.Utils.DashboardUtil;
 import org.firstinspires.ftc.teamcode.Utils.LynxOptimizedI2cFactory;
+import org.firstinspires.ftc.teamcode.Utils.TelemetryUtil;
 import org.jetbrains.annotations.NotNull;
 import org.openftc.revextensions2.ExpansionHubEx;
 import org.openftc.revextensions2.ExpansionHubMotor;
@@ -19,19 +25,22 @@ import org.openftc.revextensions2.RevExtensions2;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 // optimized drive train class
 // reduces loop times by half by cutting down unnecessary overhead in rev bulk reads
 
-public class RobotTankDriveOptimized extends RobotTankDriveBase {
+public class RobotTankDriveOptimized extends RobotTankDriveBase implements Subsystem{
 
     private ExpansionHubEx hub;
     private List<ExpansionHubMotor> motors, leftMotors, rightMotors;
     private BNO055IMU imu;
+    private FtcDashboard dashboard;
 
     public RobotTankDriveOptimized(HardwareMap hardwareMap) {
         super();
         RevExtensions2.init();
+        this.dashboard = FtcDashboard.getInstance();
 
         hub = hardwareMap.get(ExpansionHubEx.class, "hub");
 
@@ -62,6 +71,10 @@ public class RobotTankDriveOptimized extends RobotTankDriveBase {
 
         rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
         // .08841
+    }
+
+    public FtcDashboard getDashboard() {
+        return dashboard;
     }
 
     @Override
@@ -117,6 +130,36 @@ public class RobotTankDriveOptimized extends RobotTankDriveBase {
             rightMotor.setPower(gamepadY - gamepadX);
         }
     }
+
+
+    public Map<String, Object> update(Canvas fieldOverlay) {
+        TelemetryPacket packet;
+        if (isFollowingTrajectory()) {
+            Pose2d currentPose = getPoseEstimate();
+            Pose2d error = getFollowingError();
+
+            packet = new TelemetryPacket();
+            fieldOverlay = packet.fieldOverlay();
+
+            packet.put("xError", error.getX());
+            packet.put("yError", error.getY());
+            packet.put("headingError", error.getHeading());
+            fieldOverlay.setStrokeWidth(4);
+            fieldOverlay.setStroke("green");
+            DashboardUtil.drawSampledTrajectory(fieldOverlay, getTrajectory());
+
+            fieldOverlay.setFill("blue");
+            fieldOverlay.fillCircle(currentPose.getX(), currentPose.getY(), 3);
+
+            dashboard.sendTelemetryPacket(packet);
+            update();
+
+        }
+
+        return TelemetryUtil.objectToMap("unimplemented");
+    }
+
+
 
 
 

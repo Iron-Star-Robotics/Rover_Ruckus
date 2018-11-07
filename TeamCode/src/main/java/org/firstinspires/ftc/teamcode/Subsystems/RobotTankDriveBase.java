@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Subsystems;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.acmerobotics.roadrunner.drive.TankDrive;
 import com.acmerobotics.roadrunner.followers.TankPIDVAFollower;
@@ -22,6 +23,7 @@ public abstract class RobotTankDriveBase extends TankDrive {
 
     private DriveConstraints constraints;
     private TrajectoryFollower follower;
+    private Trajectory trajectory;
 
     public RobotTankDriveBase() {
         super(DriveConstants.TRACK_WIDTH);
@@ -39,6 +41,10 @@ public abstract class RobotTankDriveBase extends TankDrive {
         this.followTrajectory(this.trajectoryBuilder().turn(radians).build());
     }
 
+    public void robotLine(Vector2d pos) {
+        this.followTrajectory(this.trajectoryBuilder().lineTo(pos).build());
+    }
+
     public void followTrajectory(Trajectory trajectory) {
         follower.followTrajectory(trajectory);
     }
@@ -51,6 +57,12 @@ public abstract class RobotTankDriveBase extends TankDrive {
         updatePoseEstimate();
         updateFollower();
     }
+
+    public void setTrajectory(Trajectory trajectory) {
+        this.trajectory = trajectory;
+    }
+
+    public Trajectory getTrajectory() { return trajectory; }
 
     public boolean isFollowingTrajectory() {
         return follower.isFollowing();

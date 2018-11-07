@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.disnodeteam.dogecv.CameraViewDisplay;
 import com.disnodeteam.dogecv.DogeCV;
 import com.disnodeteam.dogecv.detectors.roverrukus.GoldAlignDetector;
@@ -7,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ThreadPool;
 
+import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveBase;
 import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveOptimized;
 
@@ -21,10 +23,12 @@ public class RRAuto extends OpMode
     private GoldAlignDetector detector;
 
     private ExecutorService frameConsumerExecutor;
-    private RobotTankDriveBase drive;
+
     private double offsetHeading;
+    private Robot robot;
     // Temporary autonomous opmode using dogecv
     // We will replace this before the next qualifier with our custom vision api
+
 
     @Override
     public void init() {
@@ -55,9 +59,9 @@ public class RRAuto extends OpMode
                 detector.enable();
             }
         });
-        drive = new RobotTankDriveOptimized(hardwareMap);
 
-
+        robot = new Robot(this);
+        robot.start();
 
     }
 
@@ -75,7 +79,8 @@ public class RRAuto extends OpMode
     @Override
     public void start() {
         // lower the lift
-        //ffsetHeading = drive.getExternalHeading();
+        offsetHeading = robot.drive.getExternalHeading();
+
     }
 
     /*
@@ -87,7 +92,10 @@ public class RRAuto extends OpMode
         telemetry.addData("X Pos" , detector.getXPosition()); // Gold X position.
 
         if (detector.getAligned()) {
-
+            robot.drive.followTrajectory(
+                    robot.drive.trajectoryBuilder()
+                        .lineTo()
+            );
         }
     }
 

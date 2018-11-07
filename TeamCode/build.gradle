@@ -22,7 +22,12 @@ dependencies {
     // other dependencies
     implementation 'com.acmerobotics.roadrunner:core:0.2.2'
     implementation project(':openCVLibrary3')
-
     compile 'org.openftc:rev-extensions-2:1.0'
     implementation project(':DogeCV')
+}
+android {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
