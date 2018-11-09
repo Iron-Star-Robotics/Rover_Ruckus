@@ -10,8 +10,13 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.OrientationSensor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveBase;
 import org.firstinspires.ftc.teamcode.Subsystems.Subsystem;
 import org.firstinspires.ftc.teamcode.Utils.DashboardUtil;
@@ -25,7 +30,7 @@ public class RobotTankDrive extends RobotTankDriveBase implements Subsystem {
     private List<DcMotorEx> motors, leftMotors, rightMotors;
     private BNO055IMU imu;
     private FtcDashboard dashboard;
-
+    private double lastHeading, currHeading, rawHeading;
 
     public RobotTankDrive(HardwareMap hardwareMap) {
         super();
@@ -136,13 +141,40 @@ public class RobotTankDrive extends RobotTankDriveBase implements Subsystem {
             update();
 
         } else {
-            packet.put("Following trajectory: ", "false");
-
-
+            updateHeading();
+            packet.put("heading: ", getHeading());
         }
+
+
         return packet;
     }
 
+    public void updateHeading() {
+        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
+        rawHeading = angles.firstAngle;
+    }
+
+    public void resetAngle() {
+        lastHeading = getRawHeading();
+        currHeading = 0;
+    }
+
+    public double getRawHeading() {
+        return rawHeading;
+    }
+
+    public double getHeading() {
+        double deltaAngle = currHeading - lastHeading;
+
+        if (deltaAngle < -Math.PI)
+            deltaAngle += 2 * Math.PI;
+        else if (deltaAngle > Math.PI)
+            deltaAngle -= 2 * Math.PI;
+
+        currHeading = rawHeading + deltaAngle;
+        lastHeading = currHeading;
+        return currHeading;
+    }
 
 
 
