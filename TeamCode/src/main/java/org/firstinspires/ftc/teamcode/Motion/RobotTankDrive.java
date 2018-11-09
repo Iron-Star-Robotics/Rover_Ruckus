@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode.Motion;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.canvas.Canvas;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -9,19 +13,23 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveBase;
+import org.firstinspires.ftc.teamcode.Subsystems.Subsystem;
+import org.firstinspires.ftc.teamcode.Utils.DashboardUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class RobotTankDrive extends RobotTankDriveBase {
+public class RobotTankDrive extends RobotTankDriveBase implements Subsystem {
 
     private List<DcMotorEx> motors, leftMotors, rightMotors;
     private BNO055IMU imu;
+    private FtcDashboard dashboard;
+
 
     public RobotTankDrive(HardwareMap hardwareMap) {
         super();
-
+        dashboard = FtcDashboard.getInstance();
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
@@ -101,6 +109,42 @@ public class RobotTankDrive extends RobotTankDriveBase {
             rightMotor.setPower(gamepadY - gamepadX);
         }
     }
+
+    public BNO055IMU getImu() { return imu; }
+
+    public FtcDashboard getDashboard() {
+        return dashboard;
+    }
+
+    public TelemetryPacket updateSubsystem() {
+        TelemetryPacket packet = new TelemetryPacket();
+        if (isFollowingTrajectory()) {
+            Pose2d currentPose = getPoseEstimate();
+            Pose2d error = getFollowingError();
+
+            Canvas fieldOverlay = packet.fieldOverlay();
+
+            packet.put("xError", error.getX());
+            packet.put("yError", error.getY());
+            packet.put("headingError", error.getHeading());
+            fieldOverlay.setStrokeWidth(4);
+            fieldOverlay.setStroke("green");
+            DashboardUtil.drawSampledTrajectory(fieldOverlay, getTrajectory());
+
+            fieldOverlay.setFill("blue");
+            fieldOverlay.fillCircle(currentPose.getX(), currentPose.getY(), 3);
+            update();
+
+        } else {
+            packet.put("Following trajectory: ", "false");
+
+
+        }
+        return packet;
+    }
+
+
+
 
 
 

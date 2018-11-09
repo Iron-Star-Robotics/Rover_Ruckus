@@ -22,7 +22,7 @@ public abstract class RobotTankDriveBase extends TankDrive {
 
 
     private DriveConstraints constraints;
-    private TrajectoryFollower follower;
+    private TankPIDVAFollower follower;
     private Trajectory trajectory;
 
     public RobotTankDriveBase() {
@@ -43,6 +43,10 @@ public abstract class RobotTankDriveBase extends TankDrive {
 
     public void robotLine(Vector2d pos) {
         this.followTrajectory(this.trajectoryBuilder().lineTo(pos).build());
+    }
+
+    public void robotMoveForward(int amount) {
+        this.followTrajectory(this.trajectoryBuilder().forward(amount).build());
     }
 
     public void followTrajectory(Trajectory trajectory) {

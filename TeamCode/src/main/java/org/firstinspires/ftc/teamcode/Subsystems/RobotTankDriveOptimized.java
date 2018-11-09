@@ -132,14 +132,13 @@ public class RobotTankDriveOptimized extends RobotTankDriveBase implements Subsy
     }
 
 
-    public Map<String, Object> update(Canvas fieldOverlay) {
-        TelemetryPacket packet;
+    public TelemetryPacket updateSubsystem() {
+        TelemetryPacket packet = new TelemetryPacket();
         if (isFollowingTrajectory()) {
             Pose2d currentPose = getPoseEstimate();
             Pose2d error = getFollowingError();
 
-            packet = new TelemetryPacket();
-            fieldOverlay = packet.fieldOverlay();
+            Canvas fieldOverlay = packet.fieldOverlay();
 
             packet.put("xError", error.getX());
             packet.put("yError", error.getY());
@@ -150,18 +149,14 @@ public class RobotTankDriveOptimized extends RobotTankDriveBase implements Subsy
 
             fieldOverlay.setFill("blue");
             fieldOverlay.fillCircle(currentPose.getX(), currentPose.getY(), 3);
-
-            dashboard.sendTelemetryPacket(packet);
             update();
 
+        } else {
+            packet.put("Following trajectory: ", "false");
+
+
         }
-
-        return TelemetryUtil.objectToMap("unimplemented");
+        return packet;
     }
-
-
-
-
-
 
 }

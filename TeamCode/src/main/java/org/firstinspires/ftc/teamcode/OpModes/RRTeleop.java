@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveOptimized;
-import org.firstinspires.ftc.teamcode.Subsystems.Intake;
 
 @TeleOp(name="RRTeleop")
 

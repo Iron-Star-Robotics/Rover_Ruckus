@@ -24,15 +24,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
 public class Robot implements OpModeManagerNotifier.Notifications{
-    enum ROBOT_MODE {
-        TELE_OP,
-        AUTO_OP
-    }
 
     public static final String TAG = "Robot";
     private FtcDashboard dashboard;
 
-    public RobotTankDriveOptimized drive;
+    public RobotTankDrive drive;
     public Lift lift;
     private OpModeManagerImpl opModeManager;
 
@@ -53,13 +49,12 @@ public class Robot implements OpModeManagerNotifier.Notifications{
 
     private Runnable subsystemUpdateRunnable = () -> {
         while (!Thread.currentThread().isInterrupted()) {
-            TelemetryPacket packet = new TelemetryPacket();
             try {
+                TelemetryPacket packet;
                 for (Subsystem subsystem : subsystems) {
                     if (subsystem == null) continue;
-                    Map<String, Object> telemetry = subsystem.update(packet.fieldOverlay());
+                    packet = subsystem.updateSubsystem();
                     // implement csv
-                    packet.putAll(telemetry);
                     for (Listener listener : listeners) {
                         listener.onPostUpdate();
                     }
@@ -70,6 +65,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
                             Thread.currentThread().interrupt();
                         }
                     }
+                    telemetryPacketQueue.add(packet);
                 }
             } catch (Throwable t) {
                 Log.wtf(TAG, t);
@@ -78,6 +74,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
     };
 
     private Runnable telemetryUpdateRunnable = () -> {
+
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 dashboard.sendTelemetryPacket(telemetryPacketQueue.take());
@@ -85,11 +82,12 @@ public class Robot implements OpModeManagerNotifier.Notifications{
                 Thread.currentThread().interrupt();
             }
         }
+
     };
 
     public Robot(OpMode opMode) {
         subsystems = new ArrayList<>();
-        drive = new RobotTankDriveOptimized(opMode.hardwareMap);
+        drive = new RobotTankDrive(opMode.hardwareMap);
         subsystems.add(drive);
         dashboard = drive.getDashboard();
         lift = new Lift(opMode.hardwareMap);
@@ -103,7 +101,6 @@ public class Robot implements OpModeManagerNotifier.Notifications{
 
         subsystemUpdateExecutor = ThreadPool.newSingleThreadExecutor("subsystem update");
         telemetryUpdateExecutor = ThreadPool.newSingleThreadExecutor("telemtetry updater");
-
 
         telemetryPacketQueue = new ArrayBlockingQueue<>(10);
 

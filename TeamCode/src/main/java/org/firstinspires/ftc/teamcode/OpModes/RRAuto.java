@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.disnodeteam.dogecv.CameraViewDisplay;
 import com.disnodeteam.dogecv.DogeCV;
@@ -92,11 +93,17 @@ public class RRAuto extends OpMode
         telemetry.addData("X Pos" , detector.getXPosition()); // Gold X position.
 
         if (detector.getAligned()) {
-            robot.drive.followTrajectory(
-                    robot.drive.trajectoryBuilder()
-                        .lineTo()
-            );
+            robot.drive.robotLine(new Vector2d(-36, 36));
+        } else {
+            robot.drive.robotTurn(Math.PI / 4);
+            if (detector.getAligned()) {
+                robot.drive.robotLine(new Vector2d(-25, 46));
+            } else {
+                robot.drive.robotTurn(Math.PI / 2);
+                robot.drive.robotLine(new Vector2d(-46, 25));
+            }
         }
+
     }
 
     /*

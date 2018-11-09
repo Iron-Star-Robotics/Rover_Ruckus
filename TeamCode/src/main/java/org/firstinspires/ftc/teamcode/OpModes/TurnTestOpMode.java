@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.Utils.DashboardUtil;
  * This is a simple routine to test turning capabilities. If this is consistently overshooting or
  * undershooting by a significant amount, re-run TrackWidthCalibrationOpMode.
  */
-@Autonomous
+@Autonomous(name="turntest")
 public class TurnTestOpMode extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
