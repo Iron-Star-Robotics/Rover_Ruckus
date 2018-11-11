@@ -1,14 +1,11 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
-import com.acmerobotics.roadrunner.Vector2d;
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
+
 import com.disnodeteam.dogecv.CameraViewDisplay;
 import com.disnodeteam.dogecv.DogeCV;
 import com.disnodeteam.dogecv.detectors.roverrukus.GoldAlignDetector;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -16,17 +13,11 @@ import com.qualcomm.robotcore.util.ThreadPool;
 
 import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
-import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveBase;
-import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveOptimized;
 
 import java.util.concurrent.ExecutorService;
 
-
-@Autonomous(name="RRAutooo", group="DogeCV")
-
-public class RRAuto extends LinearOpMode
-{
-    // Detector object
+@Autonomous(name="RRAUTO2")
+public class RRAuto2 extends LinearOpMode {
     private GoldAlignDetector detector;
 
     private ExecutorService frameConsumerExecutor;
@@ -77,15 +68,29 @@ public class RRAuto extends LinearOpMode
         waitForStart();
         if (detector.getAligned()) {
             telemetry.log().add("straight aligned");
-            encoderDrive(DRIVE_SPEED, -10, -10, 3);
+            encoderDrive(DRIVE_SPEED, -13, -13, 3);
+            robot.drive.getServo().setPosition(-1.0);
         } else {
             encoderDrive(TURN_SPEED, -1, 1,3);
             if (!detector.getAligned()) {
                 encoderDrive(TURN_SPEED, 2, -2, 3);
                 encoderDrive(DRIVE_SPEED, -8, -8, 3);
+                encoderDrive(TURN_SPEED, -1.2,1.2, 3);
+                encoderDrive(DRIVE_SPEED, -4, -4, 2);
+                robot.drive.getServo().setPosition(-1.0);
+
+
+                encoderDrive(DRIVE_SPEED, -1, -1, 2);
+
             } else {
                 telemetry.log().add("left aligned");
                 encoderDrive(DRIVE_SPEED, -7, -7, 3);
+                encoderDrive(TURN_SPEED, 1.2,-1.2, 3);
+                encoderDrive(DRIVE_SPEED, -4, -4, 2);
+                encoderDrive(TURN_SPEED, 1.2, -1.2, 2);
+                robot.drive.getServo().setPosition(-1.0);
+                encoderDrive(DRIVE_SPEED, -1, -1, 2);
+
             }
         }
 

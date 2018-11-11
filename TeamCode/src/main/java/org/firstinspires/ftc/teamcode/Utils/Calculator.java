@@ -5,6 +5,7 @@ import com.qualcomm.hardware.motors.RevRobotics40HdHexMotor;
 import com.qualcomm.hardware.motors.RevRoboticsCoreHexMotor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
+import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
 import org.firstinspires.ftc.teamcode.Motion.RobotTankDrive;
 
 public class Calculator {
@@ -20,8 +21,8 @@ public class Calculator {
         return Math.sqrt(Math.pow(pose1.getX() - pose2.getX(), 2) + Math.pow(pose1.getY() - pose2.getY(), 2));
     }
 
-    public static double Inches2Encoder(double inches){
-        return (40 * MotorConfigurationType.getMotorType(RevRobotics40HdHexMotor.class).getTicksPerRev());
+    public static int Inches2Encoder(double inches){
+        return (int) Math.round(inches / (DriveConstants.WHEEL_RADIUS * 2 * Math.PI) / 1 * DriveConstants.TICKS_PER_REV);
 
     }
 

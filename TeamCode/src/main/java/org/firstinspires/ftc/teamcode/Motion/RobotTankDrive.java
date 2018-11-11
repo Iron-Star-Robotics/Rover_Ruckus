@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.OrientationSensor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -31,7 +32,7 @@ public class RobotTankDrive extends RobotTankDriveBase implements Subsystem {
     private BNO055IMU imu;
     private FtcDashboard dashboard;
     private double lastHeading, currHeading, rawHeading;
-
+    private Servo markerArm;
     public RobotTankDrive(HardwareMap hardwareMap) {
         super();
         dashboard = FtcDashboard.getInstance();
@@ -44,6 +45,7 @@ public class RobotTankDrive extends RobotTankDriveBase implements Subsystem {
         DcMotorEx leftRear = hardwareMap.get(DcMotorEx.class, "bl");
         DcMotorEx rightRear = hardwareMap.get(DcMotorEx.class, "br");
         //DcMotorEx rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
+        this.markerArm = hardwareMap.get(Servo.class, "markerMotor");
 
         motors = Arrays.asList(leftRear, rightRear);
         leftMotors = Arrays.asList(leftRear);
@@ -174,6 +176,14 @@ public class RobotTankDrive extends RobotTankDriveBase implements Subsystem {
         currHeading = rawHeading + deltaAngle;
         lastHeading = currHeading;
         return currHeading;
+    }
+
+    public List<DcMotorEx> getMotors() {
+        return motors;
+    }
+
+    public Servo getServo() {
+        return markerArm;
     }
 
 

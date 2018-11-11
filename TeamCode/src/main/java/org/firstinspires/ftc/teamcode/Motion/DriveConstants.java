@@ -24,7 +24,7 @@ public class DriveConstants {
      */
     public static final MotorConfigurationType MOTOR_CONFIG =
             MotorConfigurationType.getMotorType(RevRobotics40HdHexMotor.class);
-    private static final double TICKS_PER_REV = MOTOR_CONFIG.getTicksPerRev(); // .06005
+    public static final double TICKS_PER_REV = MOTOR_CONFIG.getTicksPerRev(); // .06005
 
     public static double WHEEL_RADIUS = 1.75; // in
     public static double GEAR_RATIO = 1; // output/input

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -7,9 +8,10 @@ import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveOptimized;
 
 @TeleOp(name="RRTeleop")
-
+@Config
 public class RRTeleop extends LinearOpMode {
     Robot robot;
+    public static double ARM_DIST = 18;
     @Override
     public void runOpMode() {
         robot = new Robot(this);
@@ -17,7 +19,13 @@ public class RRTeleop extends LinearOpMode {
 
         waitForStart();
         while (opModeIsActive()) {
-            robot.drive.gamepadDrive(gamepad1.right_stick_x, -gamepad1.left_stick_y);
+            robot.drive.gamepadDrive(gamepad1.right_stick_x, gamepad1.left_stick_y);
+            if (gamepad1.y) {
+                robot.lift.encoderMove(ARM_DIST, 0.3);
+            }
+            else if (gamepad1.a) {
+                robot.lift.encoderMove(-ARM_DIST, 0.3);
+            }
             /*if (gamepad1.right_trigger >= .4) {
                 robot.intake.pulseIn();
             }
