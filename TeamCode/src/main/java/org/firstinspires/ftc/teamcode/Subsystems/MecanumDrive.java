@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -8,37 +7,44 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
+import org.firstinspires.ftc.teamcode.Subsystems.MecanumDriveBase;
+import org.firstinspires.ftc.teamcode.Subsystems.Subsystem;
 import org.firstinspires.ftc.teamcode.Utils.DashboardUtil;
 import org.firstinspires.ftc.teamcode.Utils.LynxOptimizedI2cFactory;
-import org.firstinspires.ftc.teamcode.Utils.TelemetryUtil;
 import org.jetbrains.annotations.NotNull;
 import org.openftc.revextensions2.ExpansionHubEx;
 import org.openftc.revextensions2.ExpansionHubMotor;
 import org.openftc.revextensions2.RevBulkData;
 import org.openftc.revextensions2.RevExtensions2;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
-// optimized drive train class
-// reduces loop times by half by cutting down unnecessary overhead in rev bulk reads
+/**
+ * Optimized mecanum drive that can cut loop times in half
+ *
+ */
 
-public class RobotTankDriveOptimized extends RobotTankDriveBase implements Subsystem{
-
+public class MecanumDrive extends MecanumDriveBase implements Subsystem {
     private ExpansionHubEx hub;
-    private List<ExpansionHubMotor> motors, leftMotors, rightMotors;
+    private ExpansionHubMotor leftFront, leftRear, rightRear, rightFront;
+    private List<ExpansionHubMotor> motors;
     private BNO055IMU imu;
+    private double rawHeading, currHeading, lastHeading;
     private FtcDashboard dashboard;
 
-    public RobotTankDriveOptimized(HardwareMap hardwareMap) {
+    public MecanumDrive(HardwareMap hardwareMap) {
         super();
+
         RevExtensions2.init();
         this.dashboard = FtcDashboard.getInstance();
 
@@ -49,43 +55,36 @@ public class RobotTankDriveOptimized extends RobotTankDriveBase implements Subsy
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
         imu.initialize(parameters);
 
-        //DcMotorEx leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-        ExpansionHubMotor leftRear = hardwareMap.get(ExpansionHubMotor.class, "leftRear");
-        ExpansionHubMotor rightRear = hardwareMap.get(ExpansionHubMotor.class, "rightRear");
-        //DcMotorEx rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
+        leftFront = hardwareMap.get(ExpansionHubMotor.class, "leftFront");
+        leftRear = hardwareMap.get(ExpansionHubMotor.class, "leftRear");
+        rightRear = hardwareMap.get(ExpansionHubMotor.class, "rightRear");
+        rightFront = hardwareMap.get(ExpansionHubMotor.class, "rightFront");
 
-        motors = Arrays.asList(leftRear, rightRear);
-        leftMotors = Arrays.asList(leftRear);
-        rightMotors = Arrays.asList(rightRear);
+        motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
 
         for (ExpansionHubMotor motor : motors) {
             // TODO: decide whether or not to use the built-in velocity PID
-            // if we keep it, DO RUN_WITH_ENCODER
+            // if you keep it, then don't tune kStatic or kA
             // otherwise, comment out the following line
-            // atm we plan to use built in pid
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
 
-        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        // TODO: reverse any motors using DcMotor.setDirection()
 
-        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
-        // .08841
-    }
-
-    public FtcDashboard getDashboard() {
-        return dashboard;
+        // TODO: set the tuned coefficients from DriveVelocityPIDTuner if using RUN_USING_ENCODER
+        // setPIDCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, ...);
     }
 
     @Override
     public PIDCoefficients getPIDCoefficients(DcMotor.RunMode runMode) {
-        PIDFCoefficients coefficients = leftMotors.get(0).getPIDFCoefficients(runMode);
+        PIDFCoefficients coefficients = leftFront.getPIDFCoefficients(runMode);
         return new PIDCoefficients(coefficients.p, coefficients.i, coefficients.d);
     }
 
     @Override
     public void setPIDCoefficients(DcMotor.RunMode runMode, PIDCoefficients coefficients) {
-        for (DcMotorEx motor : motors) {
+        for (ExpansionHubMotor motor : motors) {
             motor.setPIDFCoefficients(runMode, new PIDFCoefficients(
                     coefficients.kP, coefficients.kI, coefficients.kD, 1
             ));
@@ -95,25 +94,20 @@ public class RobotTankDriveOptimized extends RobotTankDriveBase implements Subsy
     @NotNull
     @Override
     public List<Double> getWheelPositions() {
-        double leftSum = 0, rightSum = 0;
         RevBulkData bulkData = hub.getBulkInputData();
-        for (DcMotorEx leftMotor : leftMotors) {
-            leftSum += DriveConstants.encoderTicksToInches(bulkData.getMotorCurrentPosition(leftMotor));
+        List<Double> wheelPositions = new ArrayList<>();
+        for (ExpansionHubMotor motor : motors) {
+            wheelPositions.add(DriveConstants.encoderTicksToInches(bulkData.getMotorCurrentPosition(motor)));
         }
-        for (DcMotorEx rightMotor : rightMotors) {
-            rightSum += DriveConstants.encoderTicksToInches(bulkData.getMotorCurrentPosition(rightMotor));
-        }
-        return Arrays.asList(leftSum / leftMotors.size(), rightSum / rightMotors.size());
+        return wheelPositions;
     }
 
     @Override
-    public void setMotorPowers(double v, double v1) {
-        for (ExpansionHubMotor leftMotor : leftMotors) {
-            leftMotor.setPower(v);
-        }
-        for (ExpansionHubMotor rightMotor : rightMotors) {
-            rightMotor.setPower(v1);
-        }
+    public void setMotorPowers(double v, double v1, double v2, double v3) {
+        leftFront.setPower(v);
+        leftRear.setPower(v1);
+        rightRear.setPower(v2);
+        rightFront.setPower(v3);
     }
 
     @Override
@@ -121,17 +115,9 @@ public class RobotTankDriveOptimized extends RobotTankDriveBase implements Subsy
         return imu.getAngularOrientation().firstAngle;
     }
 
+    public FtcDashboard getDashboard() { return dashboard; }
 
-    public void gamepadDrive(double gamepadX, double gamepadY) {
-        for (ExpansionHubMotor leftMotor : leftMotors) {
-            leftMotor.setPower(gamepadY + gamepadX);
-        }
-        for (ExpansionHubMotor rightMotor : rightMotors) {
-            rightMotor.setPower(gamepadY - gamepadX);
-        }
-    }
-
-
+    @Override
     public TelemetryPacket updateSubsystem() {
         TelemetryPacket packet = new TelemetryPacket();
         if (isFollowingTrajectory()) {
@@ -152,11 +138,38 @@ public class RobotTankDriveOptimized extends RobotTankDriveBase implements Subsy
             update();
 
         } else {
-            packet.put("Following trajectory: ", "false");
-
-
+            updateHeading();
+            packet.put("heading: ", getHeading());
         }
+
+
         return packet;
     }
 
+    public void updateHeading() {
+        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
+        rawHeading = angles.firstAngle;
+    }
+
+    public void resetAngle() {
+        lastHeading = getRawHeading();
+        currHeading = 0;
+    }
+
+    public double getRawHeading() {
+        return rawHeading;
+    }
+
+    public double getHeading() {
+        double deltaAngle = currHeading - lastHeading;
+
+        if (deltaAngle < -Math.PI)
+            deltaAngle += 2 * Math.PI;
+        else if (deltaAngle > Math.PI)
+            deltaAngle -= 2 * Math.PI;
+
+        currHeading = rawHeading + deltaAngle;
+        lastHeading = currHeading;
+        return currHeading;
+    }
 }

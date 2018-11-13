@@ -7,20 +7,14 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerNotifier;
-import com.qualcomm.robotcore.util.GlobalWarningSource;
-import com.qualcomm.robotcore.util.RobotLog;
 import com.qualcomm.robotcore.util.ThreadPool;
 
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
-import org.firstinspires.ftc.teamcode.Motion.RobotTankDrive;
-import org.firstinspires.ftc.teamcode.Utils.CSVWriter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
 public class Robot implements OpModeManagerNotifier.Notifications{
@@ -28,8 +22,10 @@ public class Robot implements OpModeManagerNotifier.Notifications{
     public static final String TAG = "Robot";
     private FtcDashboard dashboard;
 
-    public RobotTankDrive drive;
+    public MecanumDrive drive;
     public Lift lift;
+    public Intake intake;
+    // TODO: intake, conveyor belt, lander scorer
     private OpModeManagerImpl opModeManager;
 
 
@@ -87,11 +83,13 @@ public class Robot implements OpModeManagerNotifier.Notifications{
 
     public Robot(OpMode opMode) {
         subsystems = new ArrayList<>();
-        drive = new RobotTankDrive(opMode.hardwareMap);
+        drive = new MecanumDrive(opMode.hardwareMap);
         subsystems.add(drive);
         dashboard = drive.getDashboard();
         lift = new Lift(opMode.hardwareMap);
         subsystems.add(lift);
+        intake = new Intake(opMode.hardwareMap);
+        subsystems.add(intake);
 
         Activity activity = (Activity) opMode.hardwareMap.appContext;
         opModeManager = OpModeManagerImpl.getOpModeManagerOfActivity(activity);

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.OpModes;
+package org.firstinspires.ftc.teamcode.OpModes.Tuning;
 
 
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -18,7 +18,6 @@ import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
 import org.firstinspires.ftc.teamcode.Motion.RobotTankDrive;
 import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveBase;
-import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveOptimized;
 
 import java.util.ArrayList;
 import java.util.List;
