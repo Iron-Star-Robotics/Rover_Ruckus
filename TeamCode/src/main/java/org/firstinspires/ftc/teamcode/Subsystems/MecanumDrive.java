@@ -9,6 +9,7 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -54,6 +55,30 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
         imu.initialize(parameters);
+
+        try {
+            // axis remap
+            byte AXIS_MAP_CONFIG_BYTE = 0b00011000; //swaps y-z, 0b00100001 is y-x, 0x6 is x-z
+            byte AXIS_MAP_SIGN_BYTE = 0b000; //x, y, z
+
+            //Need to be in CONFIG mode to write to registers
+            imu.write8(BNO055IMU.Register.OPR_MODE, BNO055IMU.SensorMode.CONFIG.bVal & 0x0F);
+
+            Thread.sleep(100); //Changing modes requires a delay before doing anything else
+
+            //Write to the AXIS_MAP_CONFIG register
+            imu.write8(BNO055IMU.Register.AXIS_MAP_CONFIG, AXIS_MAP_CONFIG_BYTE & 0x0F);
+
+            //Write to the AXIS_MAP_SIGN register
+            imu.write8(BNO055IMU.Register.AXIS_MAP_SIGN, AXIS_MAP_SIGN_BYTE & 0x0F);
+
+            //Need to change back into the IMU mode to use the gyro
+            imu.write8(BNO055IMU.Register.OPR_MODE, BNO055IMU.SensorMode.IMU.bVal & 0x0F);
+
+            Thread.sleep(100); //Changing modes again requires a delay
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
 
         leftFront = hardwareMap.get(ExpansionHubMotor.class, "leftFront");
         leftRear = hardwareMap.get(ExpansionHubMotor.class, "leftRear");
@@ -171,5 +196,15 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         currHeading = rawHeading + deltaAngle;
         lastHeading = currHeading;
         return currHeading;
+    }
+
+    // set motor velocity in open loop control
+    public void setVelocity(Pose2d target) {
+        double v = target.pos().norm();
+        v = Range.clip(v, -1, 1);
+        double theta = Math.atan2(target.getX(), target.getY());
+        double omega = target.getHeading() * 5; // 5 is max heading velo
+        Pose2d targetVelocity = new Pose2d(v * Math.cos(theta), v * Math.sin(theta), omega); // determining the needed rotational velo
+
     }
 }
