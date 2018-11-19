@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.openftc.revextensions2.ExpansionHubMotor;
 
 /**
  * Caching motor class implemented by acmerobotics
@@ -16,14 +17,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 public class CachingDcMotorEx implements DcMotorEx, CachingMotor{
 
-    private  DcMotorEx delegate;
+    private ExpansionHubMotor delegate;
     private double cachedPower = 0;
     private double cachedVelocity = 0;
     private boolean needsPowerUpdate = false;
     private boolean needsVelocityUpdate = false;
     private AngleUnit angleUnit = AngleUnit.RADIANS;
 
-    public CachingDcMotorEx (DcMotorEx motorEx) {
+    public CachingDcMotorEx (ExpansionHubMotor motorEx) {
         delegate = motorEx;
     }
 

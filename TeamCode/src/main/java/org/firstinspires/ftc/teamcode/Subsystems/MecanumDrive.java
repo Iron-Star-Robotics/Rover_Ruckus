@@ -15,6 +15,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.teamcode.Motion.CachingDcMotorEx;
 import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
 import org.firstinspires.ftc.teamcode.Subsystems.MecanumDriveBase;
 import org.firstinspires.ftc.teamcode.Subsystems.Subsystem;
@@ -37,8 +38,8 @@ import java.util.List;
 
 public class MecanumDrive extends MecanumDriveBase implements Subsystem {
     private ExpansionHubEx hub;
-    private ExpansionHubMotor leftFront, leftRear, rightRear, rightFront;
-    private List<ExpansionHubMotor> motors;
+    private CachingDcMotorEx leftFront, leftRear, rightRear, rightFront;
+    private List<CachingDcMotorEx> motors;
     private BNO055IMU imu;
     private double rawHeading, currHeading, lastHeading;
     private FtcDashboard dashboard;
@@ -80,14 +81,14 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
             Thread.currentThread().interrupt();
         }
 
-        leftFront = hardwareMap.get(ExpansionHubMotor.class, "leftFront");
-        leftRear = hardwareMap.get(ExpansionHubMotor.class, "leftRear");
-        rightRear = hardwareMap.get(ExpansionHubMotor.class, "rightRear");
-        rightFront = hardwareMap.get(ExpansionHubMotor.class, "rightFront");
+        leftFront = new CachingDcMotorEx(hardwareMap.get(ExpansionHubMotor.class, "leftFront"));
+        leftRear = new CachingDcMotorEx(hardwareMap.get(ExpansionHubMotor.class, "leftRear"));
+        rightRear = new CachingDcMotorEx(hardwareMap.get(ExpansionHubMotor.class, "rightRear"));
+        rightFront = new CachingDcMotorEx(hardwareMap.get(ExpansionHubMotor.class, "rightFront"));
 
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
 
-        for (ExpansionHubMotor motor : motors) {
+        for (CachingDcMotorEx motor : motors) {
             // TODO: decide whether or not to use the built-in velocity PID
             // if you keep it, then don't tune kStatic or kA
             // otherwise, comment out the following line
@@ -109,7 +110,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
 
     @Override
     public void setPIDCoefficients(DcMotor.RunMode runMode, PIDCoefficients coefficients) {
-        for (ExpansionHubMotor motor : motors) {
+        for (CachingDcMotorEx motor : motors) {
             motor.setPIDFCoefficients(runMode, new PIDFCoefficients(
                     coefficients.kP, coefficients.kI, coefficients.kD, 1
             ));
@@ -121,7 +122,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
     public List<Double> getWheelPositions() {
         RevBulkData bulkData = hub.getBulkInputData();
         List<Double> wheelPositions = new ArrayList<>();
-        for (ExpansionHubMotor motor : motors) {
+        for (CachingDcMotorEx motor : motors) {
             wheelPositions.add(DriveConstants.encoderTicksToInches(bulkData.getMotorCurrentPosition(motor)));
         }
         return wheelPositions;
