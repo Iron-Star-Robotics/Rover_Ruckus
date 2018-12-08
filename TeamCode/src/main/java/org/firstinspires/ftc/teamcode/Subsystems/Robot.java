@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerNotifier;
 import com.qualcomm.robotcore.util.ThreadPool;
 
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
+import org.firstinspires.ftc.teamcode.Motion.CachingMotor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
 
     public static final String TAG = "Robot";
     private FtcDashboard dashboard;
+    private List<CachingMotor> motors;
 
     public MecanumDrive drive;
     public Lift lift;
@@ -51,18 +53,10 @@ public class Robot implements OpModeManagerNotifier.Notifications{
                     if (subsystem == null) continue;
                     packet = subsystem.updateSubsystem();
                     // implement csv
-                    for (Listener listener : listeners) {
-                        listener.onPostUpdate();
-                    }
-                    while (telemetryPacketQueue.remainingCapacity() == 0) {
-                        try {
-                            Thread.sleep(1);
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                        }
-                    }
-                    telemetryPacketQueue.add(packet);
+
                 }
+
+                updateMotors();
             } catch (Throwable t) {
                 Log.wtf(TAG, t);
             }
@@ -83,13 +77,14 @@ public class Robot implements OpModeManagerNotifier.Notifications{
 
     public Robot(OpMode opMode) {
         subsystems = new ArrayList<>();
-        drive = new MecanumDrive(opMode.hardwareMap);
+        motors = new ArrayList<>();
+        drive = new MecanumDrive(this, opMode.hardwareMap, opMode.telemetry);
         subsystems.add(drive);
         dashboard = drive.getDashboard();
-        lift = new Lift(opMode.hardwareMap);
-        subsystems.add(lift);
-        intake = new Intake(opMode.hardwareMap);
-        subsystems.add(intake);
+        //lift = new Lift(opMode.hardwareMap);
+        //subsystems.add(lift);
+        //intake = new Intake(opMode.hardwareMap);
+        //subsystems.add(intake);
 
         Activity activity = (Activity) opMode.hardwareMap.appContext;
         opModeManager = OpModeManagerImpl.getOpModeManagerOfActivity(activity);
@@ -98,7 +93,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
         }
 
         subsystemUpdateExecutor = ThreadPool.newSingleThreadExecutor("subsystem update");
-        telemetryUpdateExecutor = ThreadPool.newSingleThreadExecutor("telemtetry updater");
+        //telemetryUpdateExecutor = ThreadPool.newSingleThreadExecutor("telemtetry updater");
 
         telemetryPacketQueue = new ArrayBlockingQueue<>(10);
 
@@ -106,14 +101,25 @@ public class Robot implements OpModeManagerNotifier.Notifications{
 
     public void addListener(Listener listener) { listeners.add(listener); }
 
+    private void updateMotors() {
+        for (CachingMotor motor: motors) {
+            motor.update();
+        }
+    }
+
     public void start() {
         if (!started) {
             subsystemUpdateExecutor.submit(subsystemUpdateRunnable);
-            telemetryUpdateExecutor.submit(telemetryUpdateRunnable);
+            //telemetryUpdateExecutor.submit(telemetryUpdateRunnable);
             started = true;
         }
 
     }
+
+    protected void addMotor(CachingMotor motor) {
+        motors.add(motor);
+    }
+
     private void stop() {
         if (subsystemUpdateExecutor != null) {
             subsystemUpdateExecutor.shutdownNow();

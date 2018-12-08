@@ -22,7 +22,7 @@ dependencies {
     // other dependencies
     implementation 'com.acmerobotics.roadrunner:core:0.2.2'
     implementation project(':openCVLibrary3')
-    compile 'org.openftc:rev-extensions-2:1.0'
+    implementation 'org.openftc:rev-extensions-2:1.1'
     implementation project(':DogeCV')
 }
 android {
