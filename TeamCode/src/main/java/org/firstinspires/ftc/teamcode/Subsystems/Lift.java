@@ -1,14 +1,11 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
-import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.Utils.Calculator;
-
-import java.util.Map;
+import org.firstinspires.ftc.teamcode.Utils.Misc.Calculator;
 
 public class Lift implements Subsystem {
     private DcMotorEx liftMotor;

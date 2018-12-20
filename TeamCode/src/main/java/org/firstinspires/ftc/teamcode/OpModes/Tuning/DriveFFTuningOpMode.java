@@ -8,9 +8,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.internal.system.Misc;
 import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
-import org.firstinspires.ftc.teamcode.Motion.RobotTankDrive;
+import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDrive;
 import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveBase;
-import org.firstinspires.ftc.teamcode.Utils.TuningUtil;
+import org.firstinspires.ftc.teamcode.Utils.Misc.TuningUtil;
 
 import java.util.ArrayList;
 import java.util.List;

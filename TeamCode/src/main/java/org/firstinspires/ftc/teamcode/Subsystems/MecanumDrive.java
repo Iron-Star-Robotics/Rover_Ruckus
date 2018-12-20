@@ -3,30 +3,20 @@ package org.firstinspires.ftc.teamcode.Subsystems;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.acmerobotics.roadrunner.control.PIDFController;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.teamcode.Motion.CachingDcMotorEx;
+import org.firstinspires.ftc.teamcode.Utils.Hardware.CachingDcMotorEx;
 import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
-    import org.firstinspires.ftc.teamcode.Subsystems.MecanumDriveBase;
-import org.firstinspires.ftc.teamcode.Subsystems.Subsystem;
-import org.firstinspires.ftc.teamcode.Utils.DashboardUtil;
-import org.firstinspires.ftc.teamcode.Utils.LynxOptimizedI2cFactory;
+import org.firstinspires.ftc.teamcode.Utils.Misc.DashboardUtil;
+import org.firstinspires.ftc.teamcode.Utils.Hardware.LynxOptimizedI2cFactory;
 import org.jetbrains.annotations.NotNull;
 import org.openftc.revextensions2.ExpansionHubEx;
 import org.openftc.revextensions2.ExpansionHubMotor;
@@ -35,7 +25,9 @@ import org.openftc.revextensions2.RevExtensions2;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Optimized mecanum drive that can cut loop times in half
@@ -50,7 +42,6 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
     private BNO055IMU imu;
     private double rawHeading, currHeading, lastHeading;
     private FtcDashboard dashboard;
-    private Telemetry telemetry;
     private static final double radius = 2;
     private Pose2d targetVelocity = new Pose2d(0,0,0);
 
@@ -76,14 +67,13 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
     public static PIDCoefficients HEADING_COEFFECIENTS = new PIDCoefficients(0,0,0);
     public static PIDCoefficients TRANSLATIONAL_COEFFECIENTS = new PIDCoefficients(0,0,0);
 
-    public MecanumDrive(Robot robot, HardwareMap hardwareMap, Telemetry telemetry) {
+    public MecanumDrive(Robot robot, HardwareMap hardwareMap) {
         super();
 
         RevExtensions2.init();
         this.dashboard = FtcDashboard.getInstance();
 
         hub = hardwareMap.get(ExpansionHubEx.class, "hub");
-        this.telemetry = telemetry;
         imu = LynxOptimizedI2cFactory.createLynxEmbeddedImu(hub.getStandardModule(), 0);
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
@@ -135,6 +125,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
         // TODO: set the tuned coefficients from DriveVelocityPIDTuner if using RUN_USING_ENCODER
         // setPIDCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, ...);
+
     }
 
     @Override
@@ -179,38 +170,36 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
     public FtcDashboard getDashboard() { return dashboard; }
 
     @Override
-    public TelemetryPacket updateSubsystem() {
-        TelemetryPacket packet = new TelemetryPacket();
+    public Map<String, Object> updateSubsystem(Canvas fieldOverlay) {
+        Map<String, Object> telemetryData = new HashMap<>();
+        Pose2d currentPose = getPoseEstimate();
         if (isFollowingTrajectory()) {
-            /*Pose2d currentPose = getPoseEstimate();
             Pose2d error = getFollowingError();
 
-            Canvas fieldOverlay = packet.fieldOverlay();
-
-            packet.put("xError", error.getX());
-            packet.put("yError", error.getY());
-            packet.put("headingError", error.getHeading());
+            telemetryData.put("xError", error.getX());
+            telemetryData.put("yError", error.getY());
+            telemetryData.put("headingError",error.getHeading());
             fieldOverlay.setStrokeWidth(4);
             fieldOverlay.setStroke("green");
             DashboardUtil.drawSampledTrajectory(fieldOverlay, getTrajectory());
 
             fieldOverlay.setFill("blue");
             fieldOverlay.fillCircle(currentPose.getX(), currentPose.getY(), 3);
-            */
-
-            //update();
-
+            update();
         } else {
-            updateHeading();
-            packet.put("heading: ", getHeading());
+            updatePoseEstimate(); // we don't need to update the follower here
         }
 
-        internalSetVelocity(targetVelocity);
+        telemetryData.put("xPos", currentPose.getX());
+        telemetryData.put("yPos", currentPose.getY());
+        telemetryData.put("heading",currentPose.getHeading());
+
+        //internalSetVelocity(targetVelocity);
 
 
-        return packet;
+        return telemetryData;
     }
-
+    /*
     public Pose2d getTargetVelocity() {
         return targetVelocity;
     }
@@ -277,5 +266,10 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
             //telemetry.log().add("wheelVelo: " + wheelVelocity);
             motors.get(i).setVelocity(wheelVelocity, AngleUnit.RADIANS);
         }
+    }*/
+
+    // gonna use roadrunner for pose updates to clean this up a bit
+    public double getCurrHeading() {
+        return getPoseEstimate().getHeading();
     }
 }

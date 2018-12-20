@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Motion;
+package org.firstinspires.ftc.teamcode.Utils.Hardware;
 
 public interface CachingMotor {
 

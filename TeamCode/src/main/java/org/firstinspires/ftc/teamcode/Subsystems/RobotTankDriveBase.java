@@ -16,6 +16,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
 
 @Config
+@Deprecated
 public abstract class RobotTankDriveBase extends TankDrive {
     public static PIDCoefficients DISPLACEMENT_PID = new PIDCoefficients(0, 0, 0);
     public static PIDCoefficients CROSS_TRACK_PID = new PIDCoefficients(0, 0, 0);

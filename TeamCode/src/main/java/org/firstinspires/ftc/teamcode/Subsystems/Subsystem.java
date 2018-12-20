@@ -9,5 +9,5 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import java.util.Map;
 
 public interface Subsystem {
-    TelemetryPacket updateSubsystem();
+    Map<String, Object> updateSubsystem(Canvas fieldOverlay);
 }

@@ -10,10 +10,11 @@ import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerNotifier;
 import com.qualcomm.robotcore.util.ThreadPool;
 
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
-import org.firstinspires.ftc.teamcode.Motion.CachingMotor;
+import org.firstinspires.ftc.teamcode.Utils.Hardware.CachingMotor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -48,15 +49,18 @@ public class Robot implements OpModeManagerNotifier.Notifications{
     private Runnable subsystemUpdateRunnable = () -> {
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                TelemetryPacket packet;
+                TelemetryPacket packet = new TelemetryPacket();
                 for (Subsystem subsystem : subsystems) {
                     if (subsystem == null) continue;
-                    packet = subsystem.updateSubsystem();
+                    Map<String, Object> telemetryData = subsystem.updateSubsystem(packet.fieldOverlay());
+                    packet.putAll(telemetryData);
                     // implement csv
-
                 }
-
                 updateMotors();
+                while (telemetryPacketQueue.remainingCapacity() == 0) {
+                    Thread.sleep(1);
+                }
+                telemetryPacketQueue.add(packet);
             } catch (Throwable t) {
                 Log.wtf(TAG, t);
             }
@@ -64,7 +68,6 @@ public class Robot implements OpModeManagerNotifier.Notifications{
     };
 
     private Runnable telemetryUpdateRunnable = () -> {
-
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 dashboard.sendTelemetryPacket(telemetryPacketQueue.take());
@@ -78,7 +81,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
     public Robot(OpMode opMode) {
         subsystems = new ArrayList<>();
         motors = new ArrayList<>();
-        drive = new MecanumDrive(this, opMode.hardwareMap, opMode.telemetry);
+        drive = new MecanumDrive(this, opMode.hardwareMap);
         subsystems.add(drive);
         dashboard = drive.getDashboard();
         //lift = new Lift(opMode.hardwareMap);
@@ -92,8 +95,8 @@ public class Robot implements OpModeManagerNotifier.Notifications{
             opModeManager.registerListener(this);
         }
 
-        subsystemUpdateExecutor = ThreadPool.newSingleThreadExecutor("subsystem update");
-        //telemetryUpdateExecutor = ThreadPool.newSingleThreadExecutor("telemtetry updater");
+        subsystemUpdateExecutor = ThreadPool.newSingleThreadExecutor("subsystem updater");
+        telemetryUpdateExecutor = ThreadPool.newSingleThreadExecutor("telemetry updater");
 
         telemetryPacketQueue = new ArrayBlockingQueue<>(10);
 
@@ -110,7 +113,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
     public void start() {
         if (!started) {
             subsystemUpdateExecutor.submit(subsystemUpdateRunnable);
-            //telemetryUpdateExecutor.submit(telemetryUpdateRunnable);
+            telemetryUpdateExecutor.submit(telemetryUpdateRunnable);
             started = true;
         }
 

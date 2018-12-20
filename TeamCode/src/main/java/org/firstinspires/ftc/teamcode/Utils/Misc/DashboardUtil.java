@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Utils;
+package org.firstinspires.ftc.teamcode.Utils.Misc;
 
 
 import com.acmerobotics.dashboard.canvas.Canvas;

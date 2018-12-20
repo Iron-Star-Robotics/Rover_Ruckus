@@ -1,6 +1,5 @@
-package org.firstinspires.ftc.teamcode.Motion;
+package org.firstinspires.ftc.teamcode.Utils.Hardware;
 
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
@@ -8,6 +7,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.Utils.Hardware.CachingMotor;
 import org.openftc.revextensions2.ExpansionHubMotor;
 
 /**
@@ -16,7 +16,7 @@ import org.openftc.revextensions2.ExpansionHubMotor;
  * https://github.com/acmerobotics/rover-ruckus/blob/master/src/com/acmerobotics/roverruckus/robot/CachingDcMotorEx.java
  */
 
-public class CachingDcMotorEx implements DcMotorEx, CachingMotor{
+public class CachingDcMotorEx implements DcMotorEx, CachingMotor {
 
     private ExpansionHubMotor delegate;
     private double cachedPower = 0;

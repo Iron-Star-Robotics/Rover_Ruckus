@@ -1,12 +1,10 @@
-package org.firstinspires.ftc.teamcode.Utils;
+package org.firstinspires.ftc.teamcode.Utils.Misc;
 
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.hardware.motors.RevRobotics40HdHexMotor;
-import com.qualcomm.hardware.motors.RevRoboticsCoreHexMotor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
-import org.firstinspires.ftc.teamcode.Motion.RobotTankDrive;
 
 public class Calculator {
     public static double wrapAngle(final double angle1, final double angle2) {

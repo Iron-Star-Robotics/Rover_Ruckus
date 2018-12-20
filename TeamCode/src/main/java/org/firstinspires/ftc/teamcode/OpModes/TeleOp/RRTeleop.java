@@ -23,10 +23,17 @@ public class RRTeleop extends LinearOpMode {
         robot.start();
         waitForStart();
         while (opModeIsActive()) {
+            /*
             robot.drive.setRVelocity(new Pose2d(
                     -(gamepad1.left_stick_x * gamepad1.left_stick_x),
                     -(gamepad1.left_stick_y * gamepad1.left_stick_y),
                     -(gamepad1.right_stick_x * gamepad1.right_stick_x)
+            ));*/
+
+            robot.drive.setVelocity(new Pose2d(
+                    -gamepad1.left_stick_x,
+                    -gamepad1.left_stick_y,
+                    gamepad1.right_stick_x
             ));
 
 
