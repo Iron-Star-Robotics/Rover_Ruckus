@@ -26,8 +26,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
     private List<CachingMotor> motors;
 
     public MecanumDrive drive;
-    public Lift lift;
-    public Intake intake;
+
     // TODO: intake, conveyor belt, lander scorer
     private OpModeManagerImpl opModeManager;
 

@@ -12,9 +12,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-
 import org.firstinspires.ftc.teamcode.Utils.Hardware.CachingDcMotorEx;
-import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
 import org.firstinspires.ftc.teamcode.Utils.Misc.DashboardUtil;
 import org.firstinspires.ftc.teamcode.Utils.Hardware.LynxOptimizedI2cFactory;
 import org.jetbrains.annotations.NotNull;
@@ -28,6 +26,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
 
 /**
  * Optimized mecanum drive that can cut loop times in half
@@ -147,6 +147,9 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
     @Override
     public List<Double> getWheelPositions() {
         RevBulkData bulkData = hub.getBulkInputData();
+        if (bulkData == null) {
+            return Arrays.asList(0.0, 0.0, 0.0, 0.0);
+        }
         List<Double> wheelPositions = new ArrayList<>();
         for (CachingDcMotorEx motor : motors) {
             wheelPositions.add(DriveConstants.encoderTicksToInches(bulkData.getMotorCurrentPosition(motor)));
@@ -188,6 +191,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
             update();
         } else {
             updatePoseEstimate(); // we don't need to update the follower here
+            setVelocity(getTargetVelocity());
         }
 
         telemetryData.put("xPos", currentPose.getX());
@@ -199,10 +203,15 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
 
         return telemetryData;
     }
-    /*
+
     public Pose2d getTargetVelocity() {
         return targetVelocity;
     }
+
+    public void setTargetVelocity(Pose2d newVelo) {
+        targetVelocity = newVelo;
+    }
+    /*
 
     public void updateHeading() {
         Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);

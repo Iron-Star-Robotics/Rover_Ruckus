@@ -34,24 +34,6 @@ public class TurnTestOpMode extends LinearOpMode {
 
         drive.followTrajectory(trajectory);
         while (!isStopRequested() && drive.isFollowingTrajectory()) {
-            Pose2d currentPose = drive.getPoseEstimate();
-
-            TelemetryPacket packet = new TelemetryPacket();
-            Canvas fieldOverlay = packet.fieldOverlay();
-
-            packet.put("x", currentPose.getX());
-            packet.put("y", currentPose.getY());
-            packet.put("heading", currentPose.getHeading());
-
-            fieldOverlay.setStrokeWidth(4);
-            fieldOverlay.setStroke("green");
-            DashboardUtil.drawSampledTrajectory(fieldOverlay, trajectory);
-
-            fieldOverlay.setFill("blue");
-            fieldOverlay.fillCircle(currentPose.getX(), currentPose.getY(), 3);
-
-            dashboard.sendTelemetryPacket(packet);
-
             drive.update();
         }
     }

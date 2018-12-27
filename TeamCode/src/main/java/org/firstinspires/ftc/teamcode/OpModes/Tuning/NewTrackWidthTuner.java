@@ -15,6 +15,8 @@ import com.qualcomm.robotcore.util.MovingStatistics;
 
 import org.firstinspires.ftc.robotcore.internal.system.Misc;
 import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
+import org.firstinspires.ftc.teamcode.Subsystems.MecanumDrive;
+import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDrive;
 import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveBase;
 
@@ -32,12 +34,15 @@ public class NewTrackWidthTuner extends LinearOpMode {
     public static int CIRCUMFERENTIAL_DISTANCE = 500;
     public static int NUM_TRIALS = 5;
 
-
+    Robot robot;
     @Override
     public void runOpMode() throws InterruptedException {
-        RobotTankDriveBase drive = new RobotTankDrive(hardwareMap);
+        robot = new Robot(this);
+        robot.start();
+        MecanumDrive drive = robot.drive;
         // it's important that the IMU/gyro/heading sensor is not part of the localization
-        drive.setLocalizer(new TankDrive.TankLocalizer(drive, false));
+        drive.setLocalizer(new MecanumDrive.MecanumLocalizer(drive, false));
+
 
         telemetry.log().add("Press play to begin the track width calibration routine");
         telemetry.log().add("Make sure your robot has enough clearance to turn smoothly");
