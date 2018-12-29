@@ -5,6 +5,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints;
 
 import com.qualcomm.hardware.motors.NeveRest40Gearmotor;
+import com.qualcomm.hardware.motors.RevRobotics40HdHexMotor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 /*
@@ -24,16 +25,16 @@ public class DriveConstants {
      * adjust them in the dashboard; **config variable changes don't persist between app restarts**.
      */
     public static final MotorConfigurationType MOTOR_CONFIG =
-            MotorConfigurationType.getMotorType(NeveRest40Gearmotor.class);
-    public static final double TICKS_PER_REV = MOTOR_CONFIG.getTicksPerRev();
+            MotorConfigurationType.getMotorType(RevRobotics40HdHexMotor.class);
+    public static final double TICKS_PER_REV = 1120;
 
     public static double WHEEL_RADIUS = 2; // in
-    public static double GEAR_RATIO = 1; // output/input
-    public static double TRACK_WIDTH = 1; // TODO: tune this
+    public static double GEAR_RATIO = 1.25; // output/input
+    public static double TRACK_WIDTH = 12.9; // TODO: tune this
 
     public static DriveConstraints BASE_CONSTRAINTS = new DriveConstraints(30.0, 30.0, Math.PI / 2, Math.PI / 2);
 
-    public static double kV = 0;
+    public static double kV = 0.0457;
     public static double kA = 0;
     public static double kStatic = 0;
     // We won't use kA or kStatic because we are using the built in pid drive velocity

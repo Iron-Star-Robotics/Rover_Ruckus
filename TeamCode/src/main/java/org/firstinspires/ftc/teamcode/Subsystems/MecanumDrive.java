@@ -44,7 +44,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
     private FtcDashboard dashboard;
     private static final double radius = 2;
     private Pose2d targetVelocity = new Pose2d(0,0,0);
-
+    public static boolean ff = false;
     private static final Vector2d[] wheelPositions = {
             new Vector2d(8,8),
             new Vector2d(-8, 8),
@@ -81,7 +81,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
 
         try {
             // axis remap
-            byte AXIS_MAP_CONFIG_BYTE = 0b00011000; //swaps y-z, 0b00100001 is y-x, 0x6 is x-z
+            byte AXIS_MAP_CONFIG_BYTE = 0b00100001; //swaps y-z, 0b00100001 is y-x, 0x6 is x-z
             byte AXIS_MAP_SIGN_BYTE = 0b000; //x, y, zv
 
             //Need to be in CONFIG mode to write to registers
@@ -189,7 +189,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
             fieldOverlay.setFill("blue");
             fieldOverlay.fillCircle(currentPose.getX(), currentPose.getY(), 3);
             update();
-        } else {
+        } else if (!ff) {
             updatePoseEstimate(); // we don't need to update the follower here
             setVelocity(getTargetVelocity());
         }

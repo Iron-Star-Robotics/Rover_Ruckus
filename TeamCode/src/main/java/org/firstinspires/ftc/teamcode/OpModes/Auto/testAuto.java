@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.OpModes.Auto;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -18,8 +19,12 @@ public class testAuto extends LinearOpMode {
         robot.start();
 
         waitForStart();
-        while (opModeIsActive()) {
-            robot.drive.setMotorPowers(LEFT_MOTOR_POWER, RIGHT_MOTOR_POWER, RIGHT_MOTOR_POWER, LEFT_MOTOR_POWER);
-        }
+        robot.drive.setTargetVelocity(new Pose2d(
+                72.0,
+                0,
+                0
+        ));
+
+        idle();
     }
 }

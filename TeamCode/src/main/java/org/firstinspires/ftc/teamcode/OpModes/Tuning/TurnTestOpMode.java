@@ -8,6 +8,8 @@ import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.teamcode.Subsystems.MecanumDrive;
+import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDrive;
 import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveBase;
 import org.firstinspires.ftc.teamcode.Utils.Misc.DashboardUtil;
@@ -19,12 +21,13 @@ import org.firstinspires.ftc.teamcode.Utils.Misc.DashboardUtil;
  */
 @Autonomous(name="turntest")
 public class TurnTestOpMode extends LinearOpMode {
+    Robot robot;
     @Override
     public void runOpMode() throws InterruptedException {
-        FtcDashboard dashboard = FtcDashboard.getInstance();
-        RobotTankDriveBase drive = new RobotTankDrive(hardwareMap);
+        Robot robot = new Robot(this);
+        robot.start();
 
-        Trajectory trajectory = drive.trajectoryBuilder()
+        Trajectory trajectory = robot.drive.trajectoryBuilder()
                 .turnTo(Math.PI / 2)
                 .build();
 
@@ -32,9 +35,10 @@ public class TurnTestOpMode extends LinearOpMode {
 
         if (isStopRequested()) return;
 
-        drive.followTrajectory(trajectory);
-        while (!isStopRequested() && drive.isFollowingTrajectory()) {
-            drive.update();
+        robot.drive.followTrajectory(trajectory);
+        while(opModeIsActive()) {
+            telemetry.log().add("Following: " + robot.drive.isFollowingTrajectory());
+            telemetry.log().add(robot.drive.getCurrHeading() + "");
         }
     }
 }

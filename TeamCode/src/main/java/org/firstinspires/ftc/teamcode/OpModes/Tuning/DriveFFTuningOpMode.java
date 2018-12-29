@@ -8,8 +8,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.internal.system.Misc;
 import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
-import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDrive;
-import org.firstinspires.ftc.teamcode.Subsystems.RobotTankDriveBase;
+import org.firstinspires.ftc.teamcode.Subsystems.MecanumDrive;
+import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.Utils.Misc.TuningUtil;
 
 import java.util.ArrayList;
@@ -27,16 +27,16 @@ import java.util.List;
  *      regression.
  */
 @Config
-@Autonomous(name="feedforward")
+@Autonomous(name="feedforward2")
 public class DriveFFTuningOpMode extends LinearOpMode {
-    private static final double EPSILON = 1e-2;
-
     public static final double MAX_POWER = 0.7;
-    public static final double DISTANCE = 100;
-
+    public static final double DISTANCE = 60;
+    Robot robot;
     @Override
     public void runOpMode() throws InterruptedException {
-        RobotTankDriveBase drive = new RobotTankDrive(hardwareMap);
+        robot = new Robot(this);
+        robot.start();
+        MecanumDrive drive = robot.drive;
 
         NanoClock clock = NanoClock.system();
 
@@ -86,8 +86,7 @@ public class DriveFFTuningOpMode extends LinearOpMode {
         telemetry.log().add("Running...");
         telemetry.update();
 
-        double maxRpm = DriveConstants.MOTOR_CONFIG.getMaxRPM();
-        double maxVel = maxRpm * DriveConstants.GEAR_RATIO * 2 * Math.PI * DriveConstants.WHEEL_RADIUS / 60.0;
+        double maxVel = DriveConstants.rpmToVelocity(DriveConstants.MOTOR_CONFIG.getMaxRPM());
         double finalVel = MAX_POWER * maxVel;
         double accel = (finalVel * finalVel) / (2.0 * DISTANCE);
         double rampTime = Math.sqrt(2.0 * DISTANCE / accel);
@@ -111,6 +110,7 @@ public class DriveFFTuningOpMode extends LinearOpMode {
             positionSamples.add(drive.getPoseEstimate().getX());
 
             drive.setVelocity(new Pose2d(power, 0.0, 0.0));
+            telemetry.log().add("Motor power: " + power);
             drive.updatePoseEstimate();
         }
         drive.setVelocity(new Pose2d(0.0, 0.0, 0.0));
