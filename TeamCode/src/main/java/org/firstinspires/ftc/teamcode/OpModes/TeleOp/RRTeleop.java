@@ -31,9 +31,9 @@ public class RRTeleop extends LinearOpMode {
             ));*/
 
             robot.drive.setTargetVelocity(new Pose2d(
-                    -gamepad1.left_stick_y,
+                    gamepad1.left_stick_y,
                     -gamepad1.left_stick_x,
-                    gamepad1.right_stick_x
+                    -gamepad1.right_stick_x
             )); // this might seem weird but actually x is axial and y is lateral
 
 

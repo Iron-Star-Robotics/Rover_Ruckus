@@ -14,9 +14,9 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
 
 public abstract class MecanumDriveBase extends MecanumDrive {
-    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(0, 0, 0);
-    public static PIDCoefficients HEADING_PID = new PIDCoefficients(0, 0, 0);
-
+    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(0.5, 0, 0.01);
+    public static PIDCoefficients HEADING_PID = new PIDCoefficients(0.03, 0, 0.01);
+    // tune this
 
     private DriveConstraints constraints;
     private TrajectoryFollower follower;
@@ -32,6 +32,10 @@ public abstract class MecanumDriveBase extends MecanumDrive {
 
     public TrajectoryBuilder trajectoryBuilder() {
         return new TrajectoryBuilder(getPoseEstimate(), constraints);
+    }
+
+    public TrajectoryBuilder trajectoryBuilder(Pose2d currentPose) {
+        return new TrajectoryBuilder(currentPose, constraints);
     }
 
     public void followTrajectory(Trajectory trajectory) {

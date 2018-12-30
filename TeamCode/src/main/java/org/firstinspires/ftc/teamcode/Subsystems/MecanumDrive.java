@@ -44,7 +44,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
     private FtcDashboard dashboard;
     private static final double radius = 2;
     private Pose2d targetVelocity = new Pose2d(0,0,0);
-    public static boolean ff = false;
+    public static int ff = 0;
     private static final Vector2d[] wheelPositions = {
             new Vector2d(8,8),
             new Vector2d(-8, 8),
@@ -64,8 +64,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
     public static double headingMaxV = 5;
 
     private PIDFController headingController;
-    public static PIDCoefficients HEADING_COEFFECIENTS = new PIDCoefficients(0,0,0);
-    public static PIDCoefficients TRANSLATIONAL_COEFFECIENTS = new PIDCoefficients(0,0,0);
+
 
     public MecanumDrive(Robot robot, HardwareMap hardwareMap) {
         super();
@@ -109,7 +108,6 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         rightFront = new CachingDcMotorEx(hardwareMap.get(ExpansionHubMotor.class, "fr"));
 
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
-        headingController = new PIDFController(HEADING_COEFFECIENTS);
 
         for (CachingDcMotorEx motor : motors) {
             // TODO: decide whether or not to use the built-in velocity PID
@@ -121,8 +119,10 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         }
 
         // TODO: reverse any motors using DcMotor.setDirection()
-        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightRear.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
         // TODO: set the tuned coefficients from DriveVelocityPIDTuner if using RUN_USING_ENCODER
         // setPIDCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, ...);
 
@@ -189,7 +189,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
             fieldOverlay.setFill("blue");
             fieldOverlay.fillCircle(currentPose.getX(), currentPose.getY(), 3);
             update();
-        } else if (!ff) {
+        } else if (ff == 0) {
             updatePoseEstimate(); // we don't need to update the follower here
             setVelocity(getTargetVelocity());
         }
