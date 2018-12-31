@@ -1,15 +1,11 @@
-package org.firstinspires.ftc.teamcode.OpModes.Tuning;
+package org.firstinspires.ftc.teamcode.OpModes.Auto.tests;
 
-import com.acmerobotics.dashboard.canvas.Canvas;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Subsystems.MecanumDrive;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
-import org.firstinspires.ftc.teamcode.Utils.Misc.DashboardUtil;
 
 /*
  * This is a simple routine to test translational drive capabilities. If this is *consistently*

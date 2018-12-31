@@ -44,6 +44,8 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
     private FtcDashboard dashboard;
     private static final double radius = 2;
     private Pose2d targetVelocity = new Pose2d(0,0,0);
+    private OPMODE mode;
+
     public static int ff = 0;
     private static final Vector2d[] wheelPositions = {
             new Vector2d(8,8),
@@ -51,6 +53,13 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
             new Vector2d(-8,-8),
             new Vector2d(8, -8)
     };
+
+    public enum OPMODE {
+        TELEOP,
+        TUNE,
+        OPEN_LOOP,
+        FOLLOW_PATH
+    }
 
 
     private static final Vector2d[] rotorDirections = {
@@ -78,6 +87,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
         imu.initialize(parameters);
 
+        /*
         try {
             // axis remap
             byte AXIS_MAP_CONFIG_BYTE = 0b00100001; //swaps y-z, 0b00100001 is y-x, 0x6 is x-z
@@ -100,7 +110,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
             Thread.sleep(100); //Changing modes again requires a delay
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-        }
+        }*/
 
         leftFront = new CachingDcMotorEx(hardwareMap.get(ExpansionHubMotor.class, "fl"));
         leftRear = new CachingDcMotorEx(hardwareMap.get(ExpansionHubMotor.class, "bl"));
@@ -172,11 +182,15 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
 
     public FtcDashboard getDashboard() { return dashboard; }
 
+    public void setOpmode(OPMODE mode) {
+        this.mode = mode;
+    }
+
     @Override
     public Map<String, Object> updateSubsystem(Canvas fieldOverlay) {
         Map<String, Object> telemetryData = new HashMap<>();
         Pose2d currentPose = getPoseEstimate();
-        if (isFollowingTrajectory()) {
+        if (mode == OPMODE.FOLLOW_PATH) {
             Pose2d error = getFollowingError();
 
             telemetryData.put("xError", error.getX());
@@ -189,7 +203,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
             fieldOverlay.setFill("blue");
             fieldOverlay.fillCircle(currentPose.getX(), currentPose.getY(), 3);
             update();
-        } else if (ff == 0) {
+        } else if (mode == OPMODE.TELEOP) {
             updatePoseEstimate(); // we don't need to update the follower here
             setVelocity(getTargetVelocity());
         }
