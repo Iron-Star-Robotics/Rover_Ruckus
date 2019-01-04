@@ -3,17 +3,25 @@ package org.firstinspires.ftc.teamcode.CustomPath;
 
 import java.util.TreeMap;
 
-/**
- * Interpolating Tree Maps are used to get values at points that are not defined
- * by making a guess from points that are defined. This uses linear
- * interpolation.
- *
- * @param <K>
- *            The type of the key (must implement InverseInterpolable)
- * @param <V>
- *            The type of the value (must implement Interpolable)
- */
-public class InterpolatingTreeMap {
+public class InterpolatingTreeMap extends TreeMap<Double, Double> {
+    Double getInterpolated(Double key) {
+        Double exactValue = get(key);
+        if (exactValue == null) {
+            Double topBound = ceilingKey(key);
+            Double bottomBound = floorKey(key);
 
+            if (topBound == null && bottomBound == null) {
+                return null;
+            } else if (topBound == null) {
+                return get(bottomBound);
+            } else if (bottomBound == null) {
+                return get(topBound);
+            }
 
+            Double topElem = get(topBound);
+            Double bottomElem = get(bottomBound);
+            return bottomElem + (key - bottomBound) / (topBound - bottomBound) * (topElem - bottomElem);
+        }
+        return exactValue;
+    }
 }

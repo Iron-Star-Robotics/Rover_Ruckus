@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.util.ThreadPool;
 
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
 import org.firstinspires.ftc.teamcode.Utils.Hardware.CachingMotor;
+import org.openftc.revextensions2.ExpansionHubEx;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,8 +26,10 @@ public class Robot implements OpModeManagerNotifier.Notifications{
     private FtcDashboard dashboard;
     private List<CachingMotor> motors;
 
-    public MecanumDrive drive;
 
+    public MecanumDrive drive;
+    public Lift lift;
+    private ExpansionHubEx hub;
     // TODO: intake, conveyor belt, lander scorer
     private OpModeManagerImpl opModeManager;
 
@@ -78,13 +81,14 @@ public class Robot implements OpModeManagerNotifier.Notifications{
 
     };
 
-    public Robot(OpMode opMode) {
+    public Robot(OpMode opMode, ExpansionHubEx hub) {
+        this.hub =  hub;
         subsystems = new ArrayList<>();
         motors = new ArrayList<>();
         drive = new MecanumDrive(this, opMode.hardwareMap);
         subsystems.add(drive);
         dashboard = drive.getDashboard();
-        //lift = new Lift(opMode.hardwareMap);
+        lift = new Lift(this, opMode.hardwareMap);
         //subsystems.add(lift);
         //intake = new Intake(opMode.hardwareMap);
         //subsystems.add(intake);
@@ -154,6 +158,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
         }
     }
 
+    public ExpansionHubEx getHub() { return this.hub; }
 
 
 }

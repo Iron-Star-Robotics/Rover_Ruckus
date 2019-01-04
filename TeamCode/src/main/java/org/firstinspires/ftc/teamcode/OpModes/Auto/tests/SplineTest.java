@@ -7,8 +7,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Motion.Paths;
-import org.firstinspires.ftc.teamcode.Subsystems.MecanumDrive;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
+import org.firstinspires.ftc.teamcode.Utils.Hardware.Launcher;
 
 @Config
 @Autonomous(name="splinetest")
@@ -16,11 +16,12 @@ public class SplineTest extends LinearOpMode {
     Robot robot;
     @Override
     public void runOpMode() {
-        robot = new Robot(this);
+        Launcher launcher = new Launcher(this);
+        robot = launcher.getRobot();
         robot.start();
-        robot.drive.setOpmode(MecanumDrive.OPMODE.FOLLOW_PATH);
-        Trajectory trajectory = robot.drive.trajectoryBuilder(new Pose2d(-15, 15, 0))
-                .splineTo(new Pose2d(-40, 40, 0))
+
+        Trajectory trajectory = robot.drive.trajectoryBuilder(new Pose2d(-15, 15,   135))
+                .splineTo(new Pose2d(15, 70, 0))
                 .build();
 
         robot.drive.setTrajectory(trajectory);
@@ -32,9 +33,7 @@ public class SplineTest extends LinearOpMode {
             telemetry.log().add(robot.drive.getCurrHeading() + "");
         }
 
-        trajectory = Paths.DEPOT_TO_CRATER_BLUE(robot.drive.getPoseEstimate());
-        robot.drive.setTrajectory(trajectory);
-        robot.drive.followTrajectory(trajectory);
+
     }
 
 }

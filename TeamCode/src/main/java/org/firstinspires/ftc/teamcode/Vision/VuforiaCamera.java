@@ -25,7 +25,6 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 
-//import static org.firstinspires.ftc.teamcode.OpModes.VuforiaStreamOpMode.VUFORIA_LICENSE_KEY;
 
 public class VuforiaCamera {
     private VuforiaLocalizer vuforia;

@@ -1,20 +1,11 @@
 package org.firstinspires.ftc.teamcode.CustomPath;
 
-
 import com.acmerobotics.roadrunner.Vector2d;
-/*
-public class QuinticSplineSegment extends ParametricCurve{
-    private QuinticPolynomial x;
-    private QuinticPolynomial y;
 
-    /**
-     * Class for representing the end point of the interpolated quintic splines
-     */
-/*
-
+public class QuinticSplineSegment extends ParametricCurve {
     class Waypoint {
-        private double x,y,dx,dy,d2x,d2y;
-        public Waypoint(double x, double y, double dx, double dy, double d2x, double d2y) {
+        private double x, y, dx, dy, d2x, d2y;
+        Waypoint(double x, double y, double dx, double dy, double d2x, double d2y) {
             this.x = x;
             this.y = y;
             this.dx = dx;
@@ -23,51 +14,50 @@ public class QuinticSplineSegment extends ParametricCurve{
             this.d2y = d2y;
         }
 
-        Vector2d pos() { return new Vector2d(x,y); }
+        Vector2d pos() { return new Vector2d(x, y); }
         Vector2d deriv() { return new Vector2d(dx, dy); }
         Vector2d secondDeriv() { return new Vector2d(d2x, d2y); }
     }
+    QuinticPolynomial x, y;
+    double length = 0.0;
+    InterpolatingTreeMap arcLengthSamples = new InterpolatingTreeMap();
+    static final double NUM_SAMPLES = 1000;
 
-
-
-    private double length;
-    private InterpolatingTreeMap arcLengthSamples = new InterpolatingTreeMap();
     public QuinticSplineSegment(Waypoint start, Waypoint end) {
-        this.x = new QuinticPolynomial(start.x, start.dx, start.d2x, end.x, end.dx, end.d2x);
-        this.y = new QuinticPolynomial(start.y, start.dy, start.d2y, end.y, end.dy, end.d2y);
-        arcLengthSamples[0.0] = 0.0;
-        double dx = 1.0 / 1000;
-        double sum = 0;
-        double lastIntegrand = 0.0;
-        int i = 1;
-        while (i <= 1000) {
-            double t = i * dx;
-            Vector2d deriv = getPosDeriv(t);
-            double integrand = Math.sqrt(deriv.getX() * deriv.getX() + deriv.getY() * deriv.getY()) * dx;
-            sum += (integrand + lastIntegrand) / 2.0;
-            lastIntegrand = integrand;
-            arcLengthSamples[sum] = t;
-            i+=1;
-        }
-        length = sum;
+        x = new QuinticPolynomial(start.x, start.dx, start.d2x, end.x, end.dx, end.d2x);
+        y = new QuinticPolynomial(start.y, start.dy, start.d2y, end.y, end.dy, end.d2y);
 
+        double dx = 1 / NUM_SAMPLES;
+        double lastIntegrand = 0;
+        for (int i = 1; i <= NUM_SAMPLES; i++) {
+            double t = i * dx;
+            Vector2d deriv = parametricDeriv(t);
+            double integrand = Math.sqrt(deriv.getX() * deriv.getX() + deriv.getY() * deriv.getY()) * dx;
+            length += (integrand + lastIntegrand) / 2.0;
+            lastIntegrand = integrand;
+
+            arcLengthSamples.put(length, t);
+        }
     }
 
-    Vector2d getPosVector(double t) { return new Vector2d(x.get(t), y.get(t)); }
-    Vector2d getPosDeriv(double t) { return new Vector2d(x.deriv(t), y.deriv(t)); }
 
+
+    @Override
+    public Vector2d parametricDeriv(double t) { return new Vector2d(x.deriv(t), y.deriv(t)); }
+
+    @Override
+    public double displacementToParamter(double displacement) { return arcLengthSamples.getInterpolated(displacement); } // we want to get the paramter after calculating the arc length traversed
+
+    @Override
     public double parameterDeriv(double t) {
-        Vector2d deriv = getPosDeriv(t);
+        Vector2d deriv = parametricDeriv(t);
         return 1.0 / Math.sqrt(deriv.getX() * deriv.getX() + deriv.getY() * deriv.getY());
     }
 
-    public double parameterSecondDeriv(double t) {
+    @Override
+    public Vector2d parametricGet(double t) { return new Vector2d(x.get(t), y.get(t)); }
 
-    }
-
-
-
+    public double getLength() { return length; }
 
 
-
-}*/
+}

@@ -44,8 +44,6 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
     private FtcDashboard dashboard;
     private static final double radius = 2;
     private Pose2d targetVelocity = new Pose2d(0,0,0);
-    private OPMODE mode;
-
     public static int ff = 0;
     private static final Vector2d[] wheelPositions = {
             new Vector2d(8,8),
@@ -53,13 +51,6 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
             new Vector2d(-8,-8),
             new Vector2d(8, -8)
     };
-
-    public enum OPMODE {
-        TELEOP,
-        TUNE,
-        OPEN_LOOP,
-        FOLLOW_PATH
-    }
 
 
     private static final Vector2d[] rotorDirections = {
@@ -77,11 +68,9 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
 
     public MecanumDrive(Robot robot, HardwareMap hardwareMap) {
         super();
-
-        RevExtensions2.init();
         this.dashboard = FtcDashboard.getInstance();
 
-        hub = hardwareMap.get(ExpansionHubEx.class, "hub");
+        this.hub = robot.getHub();
         imu = LynxOptimizedI2cFactory.createLynxEmbeddedImu(hub.getStandardModule(), 0);
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
@@ -182,15 +171,11 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
 
     public FtcDashboard getDashboard() { return dashboard; }
 
-    public void setOpmode(OPMODE mode) {
-        this.mode = mode;
-    }
-
     @Override
     public Map<String, Object> updateSubsystem(Canvas fieldOverlay) {
         Map<String, Object> telemetryData = new HashMap<>();
         Pose2d currentPose = getPoseEstimate();
-        if (mode == OPMODE.FOLLOW_PATH) {
+        if (isFollowingTrajectory()) {
             Pose2d error = getFollowingError();
 
             telemetryData.put("xError", error.getX());
@@ -203,7 +188,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
             fieldOverlay.setFill("blue");
             fieldOverlay.fillCircle(currentPose.getX(), currentPose.getY(), 3);
             update();
-        } else if (mode == OPMODE.TELEOP) {
+        } else if (ff == 0) {
             updatePoseEstimate(); // we don't need to update the follower here
             setVelocity(getTargetVelocity());
         }
