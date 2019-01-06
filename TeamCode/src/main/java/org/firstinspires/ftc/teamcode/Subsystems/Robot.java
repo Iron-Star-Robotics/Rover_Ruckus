@@ -29,7 +29,6 @@ public class Robot implements OpModeManagerNotifier.Notifications{
 
     public MecanumDrive drive;
     public Lift lift;
-    private ExpansionHubEx hub;
     // TODO: intake, conveyor belt, lander scorer
     private OpModeManagerImpl opModeManager;
 
@@ -81,8 +80,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
 
     };
 
-    public Robot(OpMode opMode, ExpansionHubEx hub) {
-        this.hub =  hub;
+    public Robot(OpMode opMode) {
         subsystems = new ArrayList<>();
         motors = new ArrayList<>();
         drive = new MecanumDrive(this, opMode.hardwareMap);
@@ -157,8 +155,6 @@ public class Robot implements OpModeManagerNotifier.Notifications{
             opModeManager = null;
         }
     }
-
-    public ExpansionHubEx getHub() { return this.hub; }
 
 
 }

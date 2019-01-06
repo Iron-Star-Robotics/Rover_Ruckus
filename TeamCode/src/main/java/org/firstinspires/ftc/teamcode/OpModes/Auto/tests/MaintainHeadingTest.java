@@ -15,10 +15,8 @@ public class MaintainHeadingTest extends LinearOpMode{
     Robot robot;
     @Override
     public void runOpMode() throws InterruptedException {
-        Launcher launcher = new Launcher(this);
-        launcher.launch();
-
-        robot = launcher.getRobot();
+        robot = new Robot(this);
+        robot.start();
         MecanumDrive drive = robot.drive;
 
         Trajectory trajectory = drive.trajectoryBuilder()

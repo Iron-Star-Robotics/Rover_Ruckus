@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
 import com.acmerobotics.dashboard.canvas.Canvas;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.acmerobotics.roadrunner.control.PIDFController;
 import com.acmerobotics.roadrunner.profile.MotionProfile;
@@ -9,136 +9,130 @@ import com.acmerobotics.roadrunner.profile.MotionProfileGenerator;
 import com.acmerobotics.roadrunner.profile.MotionState;
 import com.acmerobotics.roadrunner.util.NanoClock;
 import com.qualcomm.hardware.motors.NeveRest20Gearmotor;
+import com.qualcomm.hardware.motors.NeveRest40Gearmotor;
+import com.qualcomm.hardware.motors.RevRobotics40HdHexMotor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Utils.Hardware.CachingDcMotorEx;
+import org.firstinspires.ftc.teamcode.Utils.Hardware.CachingServo;
 import org.openftc.revextensions2.ExpansionHubEx;
 import org.openftc.revextensions2.ExpansionHubMotor;
+import org.openftc.revextensions2.ExpansionHubServo;
 import org.openftc.revextensions2.RevBulkData;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Config
 public class Lift implements Subsystem {
+    public static PIDCoefficients LIFT_PID = new PIDCoefficients();
+    public static double LIFT_RAISE_HEIGHT = 10; // in
+    public static double LIFT_SPOOL_RADIUS = 1; // in
+    public static double LIFT_LOWER_HEIGHT = 4; // in
+    public static double LIFT_KV = 0;
+    public static double ARM_SCORE_POS = 0;
+    public static double ARM_RECV_POS = 0;
     public static final MotorConfigurationType MOTOR_CONFIG =
-            MotorConfigurationType.getMotorType(NeveRest20Gearmotor.class);
-    private static final double TICKS_PER_REV = MOTOR_CONFIG.getTicksPerRev();
+            MotorConfigurationType.getMotorType(NeveRest40Gearmotor.class);
 
-    enum MODE {
-        FOLLOW_PROFILE,
-        NONE
-    }
+    public static double LIFT_ERROR_TOLERANCE = .1;
 
-    public static double SPOOL_RADIUS = 1; // in
-    public static double GEAR_RATIO = 1; // output (spool) speed / input (motor) speed
-
-    // the operating range of the elevator is restricted to [0, MAX_HEIGHT]
-    public static double MAX_HEIGHT = 10; // in
-
-    public static PIDCoefficients PID = new PIDCoefficients(0, 0, 0);
-
-    public static double MAX_VEL = 10; // in/s
-    public static double MAX_ACCEL = 10; // in/s^2
-    public static double MAX_JERK = 20; // in/s^3
-
-    public static double kV = 0;
-    public static double kA = 0;
-    public static double kStatic = 0;
-
-    private MODE mode = MODE.NONE;
-    private CachingDcMotorEx motor;
     private PIDFController controller;
-    private MotionProfile profile;
-    private NanoClock clock = NanoClock.system();
-    private double profileStartTime, desiredHeight = 0;
-    private int offset;
+    private CachingDcMotorEx liftMotorLeft, liftMotorRight;
+    private CachingServo armServo;
+    private int encoderOffset;
+    private double desiredHeight = 0;
 
-    private ExpansionHubEx hub;
+    private double targetVelocity = 0;
 
-    private static double encoderTicksToInches(int ticks) {
-        return SPOOL_RADIUS * 2 * Math.PI * GEAR_RATIO * ticks / TICKS_PER_REV;
+    public enum Mode {
+        RAISE,
+        LOWER,
+        TELEOP
     }
+
+    private Mode mode = Mode.TELEOP;
 
     public Lift(Robot robot, HardwareMap hardwareMap) {
-        motor = new CachingDcMotorEx(hardwareMap.get(ExpansionHubMotor.class, "liftMotor"));
-        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        // if necessary, reverse the motor so "up" is positive
-        // motor.setDirection(DcMotorSimple.Direction.REVERSE);
+        controller = new PIDFController(LIFT_PID, LIFT_KV);
+        liftMotorLeft = new CachingDcMotorEx(hardwareMap.get(ExpansionHubMotor.class, "liftMotorLeft"));
+        liftMotorRight = new CachingDcMotorEx(hardwareMap.get(ExpansionHubMotor.class, "liftMotorRight"));
 
-        // motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        liftMotorLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        liftMotorRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // note: if the elevator is affected by a non-negligible constant force along the direction
-        // of motion (e.g., gravity, kinetic friction, or a combination thereof), it may be
-        // beneficial to compensate for it here (assuming no velocity PID) like so:
-        // e.g., controller = new PIDFController(PID, kV, kA, kStatic, x -> kA * 9.81);
-        hub = robot.getHub();
-        robot.addMotor(motor);
-        controller = new PIDFController(PID, kV, kA, kStatic);
-        offset = getMotorCurrentPosition();
+        liftMotorLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        liftMotorRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        armServo = new CachingServo(hardwareMap.get(ExpansionHubServo.class, "armServo"));
+
+        robot.addMotor(liftMotorLeft);
+        robot.addMotor(liftMotorRight);
+        robot.addMotor(armServo);
+
+        encoderOffset = (liftMotorRight.getCurrentPosition() + liftMotorLeft.getCurrentPosition()) / 2;
+
     }
 
-    public boolean isBusy() {
-        return profile != null && (clock.seconds() - profileStartTime) <= profile.duration();
+    private int inchesToTicks(double inches) {
+        double ticksPerRev = MOTOR_CONFIG.getTicksPerRev();
+        double circumference = 2 * Math.PI * LIFT_SPOOL_RADIUS;
+        return (int) Math.round(inches * ticksPerRev / circumference);
     }
 
-    public void setHeight(double height) {
-        height = Math.min(Math.max(0, height), MAX_HEIGHT);
-
-        double time = clock.seconds() - profileStartTime;
-        MotionState start = isBusy() ? profile.get(time) : new MotionState(desiredHeight, 0, 0, 0);
-        MotionState goal = new MotionState(height, 0, 0, 0);
-        profile = MotionProfileGenerator.generateSimpleMotionProfile(
-                start, goal, MAX_VEL, MAX_ACCEL, MAX_JERK
-        );
-        profileStartTime = clock.seconds();
-
-        this.desiredHeight = height;
-    }
-
-    public int getMotorCurrentPosition() {
-        RevBulkData bulkData = hub.getBulkInputData();
-        if (bulkData == null)
-            return 0;
-        return bulkData.getMotorCurrentPosition(motor);
+    private double ticksToInches(int ticks) {
+        double ticksPerRev = MOTOR_CONFIG.getTicksPerRev();
+        double revs = ticks / ticksPerRev;
+        return 2 * Math.PI * LIFT_SPOOL_RADIUS * revs;
     }
 
     public double getCurrentHeight() {
-        return encoderTicksToInches(getMotorCurrentPosition() - offset);
+        return ticksToInches(getMotorTicks());
     }
 
-    public void update() {
-        double power;
-        double currentHeight = getCurrentHeight();
-        if (isBusy()) {
-            // following a profile
-            double time = clock.seconds() - profileStartTime;
-            MotionState state = profile.get(time);
-            controller.setTargetPosition(state.getX());
-            power = controller.update(currentHeight, state.getV(), state.getA());
-        } else {
-            // just hold the position
-            controller.setTargetPosition(desiredHeight);
-            power = controller.update(currentHeight);
-        }
-        setPower(power);
+    public int getMotorTicks() {
+        return (liftMotorLeft.getCurrentPosition() + liftMotorRight.getCurrentPosition()) / 2;
     }
 
-    public void setPower(double power) {
-        motor.setPower(power);
-    }
-
-    public void setMode(MODE mode) {
-        this.mode = mode;
+    public void setHeight(double height) {
+        desiredHeight = height;
+        controller.setTargetPosition(desiredHeight);
     }
 
     @Override
     public Map<String, Object> updateSubsystem(Canvas fieldOverlay) {
         Map<String, Object> telemetryData = new HashMap<>();
-        telemetryData.put("Lift Height: ", getCurrentHeight());
-        update();
+        double power = controller.update(getCurrentHeight());
+        setLiftPower(power);
+        telemetryData.put("Height", getCurrentHeight());
         return telemetryData;
     }
+
+    public void setLiftPower(double power) {
+        liftMotorRight.setPower(power);
+        liftMotorLeft.setPower(power);
+    }
+
+    public void raise() {
+        setHeight(LIFT_RAISE_HEIGHT);
+    }
+
+    public void lower() {
+        setHeight(LIFT_LOWER_HEIGHT);
+    }
+
+    public void score() {
+        raise();
+        armServo.setPosition(ARM_SCORE_POS);
+    }
+
+    public void retract() {
+        lower();
+        armServo.setPosition(ARM_RECV_POS);
+    }
+
 }

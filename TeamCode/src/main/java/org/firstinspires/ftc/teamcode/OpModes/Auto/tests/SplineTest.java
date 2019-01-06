@@ -16,8 +16,7 @@ public class SplineTest extends LinearOpMode {
     Robot robot;
     @Override
     public void runOpMode() {
-        Launcher launcher = new Launcher(this);
-        robot = launcher.getRobot();
+        robot = new Robot(this);
         robot.start();
 
         Trajectory trajectory = robot.drive.trajectoryBuilder(new Pose2d(-15, 15,   135))
