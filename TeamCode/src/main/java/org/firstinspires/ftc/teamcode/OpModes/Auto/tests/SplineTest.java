@@ -14,13 +14,15 @@ import org.firstinspires.ftc.teamcode.Utils.Hardware.Launcher;
 @Autonomous(name="splinetest")
 public class SplineTest extends LinearOpMode {
     Robot robot;
+    public static Pose2d start = new Pose2d(-15,15,135);
+    public static Pose2d end = new Pose2d(15, 70, 0);
     @Override
     public void runOpMode() {
         robot = new Robot(this);
         robot.start();
 
-        Trajectory trajectory = robot.drive.trajectoryBuilder(new Pose2d(-15, 15,   135))
-                .splineTo(new Pose2d(15, 70, 0))
+        Trajectory trajectory = robot.drive.trajectoryBuilder(start)
+                .splineTo(end)
                 .build();
 
         robot.drive.setTrajectory(trajectory);

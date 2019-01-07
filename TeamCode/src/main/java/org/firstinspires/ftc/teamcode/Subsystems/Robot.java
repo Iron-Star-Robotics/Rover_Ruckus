@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.util.ThreadPool;
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
 import org.firstinspires.ftc.teamcode.Utils.Hardware.CachingMotor;
 import org.openftc.revextensions2.ExpansionHubEx;
+import org.openftc.revextensions2.RevExtensions2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,6 +82,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
     };
 
     public Robot(OpMode opMode) {
+        RevExtensions2.init();
         subsystems = new ArrayList<>();
         motors = new ArrayList<>();
         drive = new MecanumDrive(this, opMode.hardwareMap);

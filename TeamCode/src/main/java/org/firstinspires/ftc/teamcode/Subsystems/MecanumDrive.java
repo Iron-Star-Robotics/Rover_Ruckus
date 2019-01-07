@@ -70,7 +70,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         super();
         this.dashboard = FtcDashboard.getInstance();
 
-        this.hub = robot.getHub();
+        hub = hardwareMap.get(ExpansionHubEx.class, "hub");
         imu = LynxOptimizedI2cFactory.createLynxEmbeddedImu(hub.getStandardModule(), 0);
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;

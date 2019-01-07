@@ -32,30 +32,19 @@ public class Lift implements Subsystem {
     public static PIDCoefficients LIFT_PID = new PIDCoefficients();
     public static double LIFT_RAISE_HEIGHT = 10; // in
     public static double LIFT_SPOOL_RADIUS = 1; // in
-    public static double LIFT_LOWER_HEIGHT = 4; // in
+    public static double LIFT_LOWER_HEIGHT = 0; // in
     public static double LIFT_KV = 0;
     public static double ARM_SCORE_POS = 0;
     public static double ARM_RECV_POS = 0;
     public static final MotorConfigurationType MOTOR_CONFIG =
             MotorConfigurationType.getMotorType(NeveRest40Gearmotor.class);
 
-    public static double LIFT_ERROR_TOLERANCE = .1;
 
     private PIDFController controller;
     private CachingDcMotorEx liftMotorLeft, liftMotorRight;
     private CachingServo armServo;
     private int encoderOffset;
-    private double desiredHeight = 0;
 
-    private double targetVelocity = 0;
-
-    public enum Mode {
-        RAISE,
-        LOWER,
-        TELEOP
-    }
-
-    private Mode mode = Mode.TELEOP;
 
     public Lift(Robot robot, HardwareMap hardwareMap) {
         controller = new PIDFController(LIFT_PID, LIFT_KV);
@@ -90,17 +79,20 @@ public class Lift implements Subsystem {
         return 2 * Math.PI * LIFT_SPOOL_RADIUS * revs;
     }
 
-    public double getCurrentHeight() {
+    private double getCurrentHeight() {
         return ticksToInches(getMotorTicks());
     }
 
-    public int getMotorTicks() {
+    private int getMotorTicks() {
         return (liftMotorLeft.getCurrentPosition() + liftMotorRight.getCurrentPosition()) / 2;
     }
 
-    public void setHeight(double height) {
-        desiredHeight = height;
-        controller.setTargetPosition(desiredHeight);
+    private void setHeight(double height) {
+        if (height > LIFT_RAISE_HEIGHT)
+            height = LIFT_RAISE_HEIGHT;
+        else if (height < LIFT_LOWER_HEIGHT)
+            height = LIFT_LOWER_HEIGHT;
+        controller.setTargetPosition(height);
     }
 
     @Override
