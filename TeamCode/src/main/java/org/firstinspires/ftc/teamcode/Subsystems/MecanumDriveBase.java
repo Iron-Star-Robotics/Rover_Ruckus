@@ -42,6 +42,7 @@ public abstract class MecanumDriveBase extends MecanumDrive {
         setPoseEstimate(trajectory.get(0));
     }
 
+
     public void updateFollower() {
         follower.update(getPoseEstimate());
     }

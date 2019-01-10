@@ -41,7 +41,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
 
 
     private List<Subsystem> subsystems;
-    private ExecutorService subsystemUpdateExecutor, telemetryUpdateExecutor;
+    private ExecutorService subsystemUpdateExecutor;
 
     private BlockingQueue<TelemetryPacket> telemetryPacketQueue;
 
@@ -60,10 +60,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
                     // implement csv
                 }
                 updateMotors();
-                while (telemetryPacketQueue.remainingCapacity() == 0) {
-                    Thread.sleep(1);
-                }
-                telemetryPacketQueue.add(packet);
+                dashboard.sendTelemetryPacket(packet); // ftc dashboard is run in a seperate thread natively so we dont need to worry about that!
             } catch (Throwable t) {
                 Log.wtf(TAG, t);
             }
@@ -83,11 +80,12 @@ public class Robot implements OpModeManagerNotifier.Notifications{
 
     public Robot(OpMode opMode) {
         RevExtensions2.init();
+        this.dashboard = FtcDashboard.getInstance();
         subsystems = new ArrayList<>();
         motors = new ArrayList<>();
         drive = new MecanumDrive(this, opMode.hardwareMap);
         subsystems.add(drive);
-        dashboard = drive.getDashboard();
+
         lift = new Lift(this, opMode.hardwareMap);
         //subsystems.add(lift);
         //intake = new Intake(opMode.hardwareMap);
@@ -100,9 +98,6 @@ public class Robot implements OpModeManagerNotifier.Notifications{
         }
 
         subsystemUpdateExecutor = ThreadPool.newSingleThreadExecutor("subsystem updater");
-        telemetryUpdateExecutor = ThreadPool.newSingleThreadExecutor("telemetry updater");
-
-        telemetryPacketQueue = new ArrayBlockingQueue<>(10);
 
     }
 
@@ -117,7 +112,6 @@ public class Robot implements OpModeManagerNotifier.Notifications{
     public void start() {
         if (!started) {
             subsystemUpdateExecutor.submit(subsystemUpdateRunnable);
-            telemetryUpdateExecutor.submit(telemetryUpdateRunnable);
             started = true;
         }
 
@@ -131,11 +125,6 @@ public class Robot implements OpModeManagerNotifier.Notifications{
         if (subsystemUpdateExecutor != null) {
             subsystemUpdateExecutor.shutdownNow();
             subsystemUpdateExecutor = null;
-        }
-
-        if (telemetryUpdateExecutor != null) {
-            telemetryUpdateExecutor.shutdownNow();
-            telemetryUpdateExecutor = null;
         }
     }
 

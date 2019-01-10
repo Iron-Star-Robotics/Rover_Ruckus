@@ -12,17 +12,15 @@ import com.qualcomm.hardware.motors.NeveRest20Gearmotor;
 import com.qualcomm.hardware.motors.NeveRest40Gearmotor;
 import com.qualcomm.hardware.motors.RevRobotics40HdHexMotor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
+
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Utils.Hardware.CachingDcMotorEx;
 import org.firstinspires.ftc.teamcode.Utils.Hardware.CachingServo;
-import org.openftc.revextensions2.ExpansionHubEx;
+
 import org.openftc.revextensions2.ExpansionHubMotor;
 import org.openftc.revextensions2.ExpansionHubServo;
-import org.openftc.revextensions2.RevBulkData;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +34,7 @@ public class Lift implements Subsystem {
     public static double LIFT_KV = 0;
     public static double ARM_SCORE_POS = 0;
     public static double ARM_RECV_POS = 0;
+    // these constants are static and non final for now so they can be modified thru the dashboard as needed
     public static final MotorConfigurationType MOTOR_CONFIG =
             MotorConfigurationType.getMotorType(NeveRest40Gearmotor.class);
 
@@ -44,6 +43,10 @@ public class Lift implements Subsystem {
     private CachingDcMotorEx liftMotorLeft, liftMotorRight;
     private CachingServo armServo;
     private int encoderOffset;
+
+    enum Mode {
+
+    }
 
 
     public Lift(Robot robot, HardwareMap hardwareMap) {

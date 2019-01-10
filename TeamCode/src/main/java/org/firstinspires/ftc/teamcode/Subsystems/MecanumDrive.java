@@ -7,6 +7,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.acmerobotics.roadrunner.control.PIDFController;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -41,7 +42,6 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
     private List<CachingDcMotorEx> motors;
     private BNO055IMU imu;
     private double rawHeading, currHeading, lastHeading;
-    private FtcDashboard dashboard;
     private static final double radius = 2;
     private Pose2d targetVelocity = new Pose2d(0,0,0);
     public static int ff = 0;
@@ -68,7 +68,6 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
 
     public MecanumDrive(Robot robot, HardwareMap hardwareMap) {
         super();
-        this.dashboard = FtcDashboard.getInstance();
 
         hub = hardwareMap.get(ExpansionHubEx.class, "hub");
         imu = LynxOptimizedI2cFactory.createLynxEmbeddedImu(hub.getStandardModule(), 0);
@@ -169,7 +168,6 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         return imu.getAngularOrientation().firstAngle;
     }
 
-    public FtcDashboard getDashboard() { return dashboard; }
 
     @Override
     public Map<String, Object> updateSubsystem(Canvas fieldOverlay) {
@@ -279,5 +277,21 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
     // gonna use roadrunner for pose updates to clean this up a bit
     public double getCurrHeading() {
         return getPoseEstimate().getHeading();
+    }
+
+    public void turnTo(double degrees) {
+        double radians = Math.toRadians(degrees);
+        Trajectory trajectory = trajectoryBuilder().turnTo(radians).build();
+        followTrajectory(trajectory);
+    }
+
+    public void forward(double distance) {
+        Trajectory trajectory = trajectoryBuilder().forward(distance).build();
+        followTrajectory(trajectory);
+    }
+
+    public void strafeLeft(double distance) {
+        Trajectory trajectory = trajectoryBuilder().strafeLeft(distance).build();
+        followTrajectory(trajectory);
     }
 }
