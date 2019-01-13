@@ -26,6 +26,7 @@ public abstract class RRAuto extends LinearOpMode {
 
         robot = new Robot(this);
         robot.lift.raise();
+        robot.drive.turnTo(0); // make sure we are straight
         robot.drive.strafeLeft(strafeDist);
 
         if (vision) {

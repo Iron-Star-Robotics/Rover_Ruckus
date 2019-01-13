@@ -294,4 +294,14 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         Trajectory trajectory = trajectoryBuilder().strafeLeft(distance).build();
         followTrajectory(trajectory);
     }
+
+    public void strafeRight(double distance) {
+        Trajectory trajectory = trajectoryBuilder().strafeRight(distance).build();
+        followTrajectory(trajectory);
+    }
+
+    public void lineTo(Vector2d dest) { // line to a place with heading correction
+        Trajectory trajectory = trajectoryBuilder().lineTo(dest).build();
+        followTrajectory(trajectory);
+    }
 }

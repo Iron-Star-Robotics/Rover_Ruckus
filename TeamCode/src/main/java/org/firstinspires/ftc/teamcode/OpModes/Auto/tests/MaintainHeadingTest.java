@@ -7,7 +7,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Subsystems.MecanumDrive;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
-import org.firstinspires.ftc.teamcode.Utils.Hardware.Launcher;
 
 @Autonomous(name="maintainHeading")
 public class MaintainHeadingTest extends LinearOpMode{

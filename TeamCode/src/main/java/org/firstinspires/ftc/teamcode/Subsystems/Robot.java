@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerNotifier;
 import com.qualcomm.robotcore.util.ThreadPool;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
 import org.firstinspires.ftc.teamcode.Utils.Hardware.CachingMotor;
 import org.openftc.revextensions2.ExpansionHubEx;
@@ -79,15 +80,34 @@ public class Robot implements OpModeManagerNotifier.Notifications{
     };
 
     public Robot(OpMode opMode) {
+        Telemetry telemetry = opMode.telemetry;
+
         RevExtensions2.init();
+
+        telemetry.log().add("REV Extensions successfully initialized!");
         this.dashboard = FtcDashboard.getInstance();
         subsystems = new ArrayList<>();
         motors = new ArrayList<>();
-        drive = new MecanumDrive(this, opMode.hardwareMap);
-        subsystems.add(drive);
 
-        lift = new Lift(this, opMode.hardwareMap);
-        //subsystems.add(lift);
+        boolean allGood = true;
+
+        try {
+            drive = new MecanumDrive(this, opMode.hardwareMap);
+            subsystems.add(drive);
+            telemetry.log().add("Mecanum Drive loaded successfully!");
+        } catch (IllegalArgumentException e) {
+            telemetry.log().add("Mecanum Drive init failed with: " + e.toString());
+            allGood = false;
+        }
+
+        try {
+            lift = new Lift(this, opMode.hardwareMap);
+            subsystems.add(lift);
+            telemetry.log().add("Lift loaded successfully!");
+        } catch (IllegalArgumentException e) {
+            telemetry.log().add("Lift init failed with: " + e.toString());
+            allGood = false;
+        }
         //intake = new Intake(opMode.hardwareMap);
         //subsystems.add(intake);
 
@@ -98,6 +118,13 @@ public class Robot implements OpModeManagerNotifier.Notifications{
         }
 
         subsystemUpdateExecutor = ThreadPool.newSingleThreadExecutor("subsystem updater");
+        telemetry.log().add("Started subsystem thread!");
+        telemetry.log().add("Started telemetry thread!");
+
+        if (allGood)
+            telemetry.log().add("All system initialization successful!");
+        else
+            telemetry.log().add("Not all systems were loaded correctly >:(");
 
     }
 

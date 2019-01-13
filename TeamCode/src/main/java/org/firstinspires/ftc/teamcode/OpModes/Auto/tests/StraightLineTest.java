@@ -4,9 +4,7 @@ import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.Subsystems.MecanumDrive;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
-import org.firstinspires.ftc.teamcode.Utils.Hardware.Launcher;
 
 /*
  * This is a simple routine to test translational drive capabilities. If this is *consistently*
@@ -17,9 +15,8 @@ public class StraightLineTest extends LinearOpMode {
     Robot robot;
     @Override
     public void runOpMode() throws InterruptedException {
-        Launcher launcher = new Launcher(this);
-        launcher.launch();
-        robot = launcher.getRobot();
+        robot = new Robot(this);
+
 
         Trajectory trajectory = robot.drive.trajectoryBuilder()
                 .forward(30)
