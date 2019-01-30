@@ -40,6 +40,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
     private ExpansionHubEx hub;
     private CachingDcMotorEx leftFront, leftRear, rightRear, rightFront;
     private List<CachingDcMotorEx> motors;
+    private double bias = 0;
     private BNO055IMU imu;
     private double rawHeading, currHeading, lastHeading;
     private static final double radius = 2;
@@ -165,7 +166,11 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
 
     @Override
     public double getExternalHeading() {
-        return imu.getAngularOrientation().firstAngle;
+        return imu.getAngularOrientation().firstAngle + bias;
+    }
+
+    public void setBias(double radians) {
+        bias = radians;
     }
 
 
@@ -279,29 +284,35 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         return getPoseEstimate().getHeading();
     }
 
+
     public void turnTo(double degrees) {
         double radians = Math.toRadians(degrees);
         Trajectory trajectory = trajectoryBuilder().turnTo(radians).build();
+        setTrajectory(trajectory);
         followTrajectory(trajectory);
     }
 
     public void forward(double distance) {
         Trajectory trajectory = trajectoryBuilder().forward(distance).build();
+        setTrajectory(trajectory);
         followTrajectory(trajectory);
     }
 
     public void strafeLeft(double distance) {
         Trajectory trajectory = trajectoryBuilder().strafeLeft(distance).build();
+        setTrajectory(trajectory);
         followTrajectory(trajectory);
     }
 
     public void strafeRight(double distance) {
         Trajectory trajectory = trajectoryBuilder().strafeRight(distance).build();
+        setTrajectory(trajectory);
         followTrajectory(trajectory);
     }
 
     public void lineTo(Vector2d dest) { // line to a place with heading correction
         Trajectory trajectory = trajectoryBuilder().lineTo(dest).build();
+        setTrajectory(trajectory);
         followTrajectory(trajectory);
     }
 }

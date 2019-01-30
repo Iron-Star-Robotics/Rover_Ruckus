@@ -7,13 +7,12 @@ import org.firstinspires.ftc.teamcode.Motion.Paths;
 
 @Autonomous(name="singleSampleCrater")
 public class SingleSampleCrater extends RRAuto {
-
     @Override
     public void runOpMode() {
         init(true); // complete sampling routine
-        Trajectory trajectory = Paths.craterToDepot(robot.drive.getPoseEstimate());
-        robot.drive.followTrajectory(trajectory);
+        waitForStart();
 
+        sample();
         // deposit marker
     }
 }

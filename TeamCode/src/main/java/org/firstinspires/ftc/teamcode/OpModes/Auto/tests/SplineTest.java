@@ -27,12 +27,17 @@ public class SplineTest extends LinearOpMode {
         telemetry.log().add("pose x: " + robot.drive.getPoseEstimate().getX() + " pose y: " + robot.drive.getPoseEstimate().getX());
         waitForStart();
         robot.drive.followTrajectory(trajectory);
-        while(opModeIsActive()) {
+        while(robot.drive.isFollowingTrajectory() && opModeIsActive()) {
             telemetry.log().add("Following: " + robot.drive.isFollowingTrajectory());
             telemetry.log().add(robot.drive.getCurrHeading() + "");
         }
 
 
+        robot.drive.turnTo(90);
+        while(robot.drive.isFollowingTrajectory() && opModeIsActive()) {
+            telemetry.log().add("Following: " + robot.drive.isFollowingTrajectory());
+            telemetry.log().add(robot.drive.getCurrHeading() + "");
+        }
     }
 
 }

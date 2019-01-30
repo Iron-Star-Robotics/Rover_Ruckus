@@ -39,7 +39,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
     public interface Listener {
         void onPostUpdate();
     }
-
+    private Telemetry telemetry;
 
     private List<Subsystem> subsystems;
     private ExecutorService subsystemUpdateExecutor;
@@ -58,6 +58,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
                     if (subsystem == null) continue;
                     Map<String, Object> telemetryData = subsystem.updateSubsystem(packet.fieldOverlay());
                     packet.putAll(telemetryData);
+
                     // implement csv
                 }
                 updateMotors();
@@ -80,7 +81,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
     };
 
     public Robot(OpMode opMode) {
-        Telemetry telemetry = opMode.telemetry;
+        this.telemetry = opMode.telemetry;
 
         RevExtensions2.init();
 
@@ -108,6 +109,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
             telemetry.log().add("Lift init failed with: " + e.toString());
             allGood = false;
         }
+
         //intake = new Intake(opMode.hardwareMap);
         //subsystems.add(intake);
 
