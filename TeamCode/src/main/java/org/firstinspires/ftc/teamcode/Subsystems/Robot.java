@@ -101,14 +101,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
             allGood = false;
         }
 
-        try {
-            lift = new Lift(this, opMode.hardwareMap);
-            subsystems.add(lift);
-            telemetry.log().add("Lift loaded successfully!");
-        } catch (IllegalArgumentException e) {
-            telemetry.log().add("Lift init failed with: " + e.toString());
-            allGood = false;
-        }
+
 
         //intake = new Intake(opMode.hardwareMap);
         //subsystems.add(intake);

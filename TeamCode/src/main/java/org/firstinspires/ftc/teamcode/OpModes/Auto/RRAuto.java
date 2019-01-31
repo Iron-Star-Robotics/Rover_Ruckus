@@ -122,45 +122,6 @@ public abstract class RRAuto extends LinearOpMode {
 
         robot.drive.setBias(Math.PI / 4);
 
-
-        Trajectory trajectory = robot.drive.trajectoryBuilder()
-                .splineTo(new Pose2d(-60, 63, Math.PI))
-                .build();
-
-        robot.drive.setTrajectory(trajectory);
-        robot.drive.followTrajectory(trajectory);
-
-        while (opModeIsActive() && robot.drive.isFollowingTrajectory()) {
-
-        }
-
-        trajectory = robot.drive.trajectoryBuilder(DriveConstants.FAST_CONSTRAINTS)
-                .waitFor(1)
-                .lineTo(new Vector2d(-50, robot.drive.getPoseEstimate().getY()), new ConstantInterpolator(Math.PI))
-                .build();
-
-
-        robot.drive.setTrajectory(trajectory);
-        robot.drive.followTrajectory(trajectory);
-
-        while (opModeIsActive() && robot.drive.isFollowingTrajectory()) {
-
-        }
-
-        servo.setPosition(-.75);
-
-        trajectory = robot.drive.trajectoryBuilder(DriveConstants.FAST_CONSTRAINTS)
-                .strafeLeft(6)
-                .waitFor(1)
-                .lineTo(new Vector2d(55, robot.drive.getPoseEstimate().getY()), new ConstantInterpolator(Math.PI))
-                .build();
-
-        robot.drive.setTrajectory(trajectory);
-        robot.drive.followTrajectory(trajectory);
-
-        while (opModeIsActive() && robot.drive.isFollowingTrajectory()) {
-
-        }
     }
 
     public Trajectory rightSampleTrajectory() {

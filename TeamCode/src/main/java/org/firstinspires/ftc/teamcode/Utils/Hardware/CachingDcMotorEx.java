@@ -18,7 +18,7 @@ import org.openftc.revextensions2.ExpansionHubMotor;
 
 public class CachingDcMotorEx implements DcMotorEx, CachingMotor {
 
-    private ExpansionHubMotor delegate;
+    protected ExpansionHubMotor delegate;
     private double cachedPower = 0;
     private double cachedVelocity = 0;
     private boolean needsPowerUpdate = false;

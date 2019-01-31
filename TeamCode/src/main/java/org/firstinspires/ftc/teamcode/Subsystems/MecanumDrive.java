@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import org.firstinspires.ftc.teamcode.Utils.Hardware.CachingDcMotorEx;
+import org.firstinspires.ftc.teamcode.Utils.Hardware.IMU;
 import org.firstinspires.ftc.teamcode.Utils.Misc.DashboardUtil;
 import org.firstinspires.ftc.teamcode.Utils.Hardware.LynxOptimizedI2cFactory;
 import org.jetbrains.annotations.NotNull;
@@ -41,11 +42,10 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
     private CachingDcMotorEx leftFront, leftRear, rightRear, rightFront;
     private List<CachingDcMotorEx> motors;
     private double bias = 0;
-    private BNO055IMU imu;
-    private double rawHeading, currHeading, lastHeading;
-    private static final double radius = 2;
+    private IMU imu;
     private Pose2d targetVelocity = new Pose2d(0,0,0);
     public static int ff = 0;
+
     private static final Vector2d[] wheelPositions = {
             new Vector2d(8,8),
             new Vector2d(-8, 8),
@@ -71,6 +71,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         super();
 
         hub = hardwareMap.get(ExpansionHubEx.class, "hub");
+        /*
         imu = LynxOptimizedI2cFactory.createLynxEmbeddedImu(hub.getStandardModule(), 0);
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
@@ -100,6 +101,8 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }*/
+
+        imu = new IMU(IMU.IMU_POS.VERTICAL, hub);
 
         leftFront = new CachingDcMotorEx(hardwareMap.get(ExpansionHubMotor.class, "fl"));
         leftRear = new CachingDcMotorEx(hardwareMap.get(ExpansionHubMotor.class, "bl"));
@@ -166,17 +169,17 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
 
     @Override
     public double getExternalHeading() {
-        return imu.getAngularOrientation().firstAngle + bias;
+        return imu.getRawAngle();
     }
 
     public void setBias(double radians) {
-        bias = radians;
+        imu.setBias(radians);
     }
-
 
     @Override
     public Map<String, Object> updateSubsystem(Canvas fieldOverlay) {
         Map<String, Object> telemetryData = new HashMap<>();
+        imu.update();
         Pose2d currentPose = getPoseEstimate();
         if (isFollowingTrajectory()) {
             Pose2d error = getFollowingError();
