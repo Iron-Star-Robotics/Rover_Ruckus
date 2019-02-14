@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.Utils.Misc.ExponentialSmoother;
+import org.firstinspires.ftc.teamcode.Utils.Misc.Smoother;
 
 @TeleOp(name="RRTeleop")
 @Config
@@ -24,33 +25,54 @@ public class RRTeleop extends LinearOpMode {
     public static final double LATERAL_SMOOTHING_COEFF = .7;
     public static final double TURN_SMOOTH_COEFF = .5;
 
-    ExponentialSmoother axialSmoother;
-    ExponentialSmoother lateralSmoother;
-    ExponentialSmoother turningSmoother;
+    DcMotorEx liftMotor;
 
+
+    Smoother smoother;
+
+    boolean fieldCentric;
 
     @Override
     public void runOpMode() {
-        axialSmoother = new ExponentialSmoother(AXIAL_SMOOTHING_COEFF);
-        lateralSmoother = new ExponentialSmoother(LATERAL_SMOOTHING_COEFF);
-        turningSmoother = new ExponentialSmoother(TURN_SMOOTH_COEFF);
-        axialSmoother.reset();
-        lateralSmoother.reset();
-        turningSmoother.reset();
+       smoother = new Smoother();
+       smoother.setMode(Smoother.MODE.EXPONENTIAL);
+
+        fieldCentric = false;
 
         robot = new Robot(this);
         robot.start();
+        liftMotor = (DcMotorEx) hardwareMap.get(DcMotor.class, "liftMotor");
+        liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         waitForStart();
         while (opModeIsActive()) {
-            robot.drive.setTargetVelocity(new Pose2d(
-                    axialSmoother.update(-gamepad1.left_stick_y),
-                    lateralSmoother.update(-gamepad1.left_stick_x),
-                    turningSmoother.update(-gamepad1.right_stick_x)
-            ));
+            long startTime = System.currentTimeMillis();
+            Pose2d controllerPose = new Pose2d(
+                    -gamepad1.left_stick_y,
+                    -gamepad1.left_stick_x,
+                    -gamepad1.right_stick_x
+            );
 
+            robot.drive.setTargetVelocity(smoother.transform(controllerPose));
+
+            if (gamepad1.y)
+                liftMotor.setPower(1.0);
+            else if (gamepad1.a)
+                liftMotor.setPower(-1.0);
+            else
+                liftMotor.setPower(0);
+
+            telemetry.addData("Lift count: ", liftMotor.getCurrentPosition());
+            telemetry.update();
             //telemetry.log().add("X: " + robot.drive.getTargetVelocity().getX() + " Y: " + robot.drive.getTargetVelocity().getY());
+            long endTime = System.currentTimeMillis();
+            telemetry.addData("Loop Time (Hz):  ", 1 / ((endTime - startTime) / 1000));
         }
+
+
     }
 
     public double scalePowers(double power) {
@@ -58,5 +80,11 @@ public class RRTeleop extends LinearOpMode {
         if (gamepad2.left_bumper) return ENDGAME_DAMPER * sinPower;
         return NORMAL_DAMPER * sinPower;
     }
+
+    public void setFieldCentric() {
+
+    }
+
+
 
 }

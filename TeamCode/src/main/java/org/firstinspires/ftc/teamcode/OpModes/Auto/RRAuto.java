@@ -126,15 +126,9 @@ public abstract class RRAuto extends LinearOpMode {
 
     public Trajectory rightSampleTrajectory() {
         return robot.drive.trajectoryBuilder(new Pose2d(14.183, 14.183, Math.PI / 4))
-                .strafeLeft(7)
+                .strafeTo(new Vector2d(10.566,17.8))
                 .waitFor(1)
                 .turnTo(0)
-                .waitFor(1)
-                .lineTo(new Vector2d(45,25), new ConstantInterpolator(0))
-                .waitFor(1)
-                .lineTo(new Vector2d(24,24), new ConstantInterpolator(0))
-                .waitFor(1)
-                .turnTo(Math.toRadians(115))
                 .build();
     }
 

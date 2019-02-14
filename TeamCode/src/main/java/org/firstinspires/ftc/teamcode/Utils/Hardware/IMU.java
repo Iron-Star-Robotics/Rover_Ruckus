@@ -48,7 +48,7 @@ public class IMU {
     private void axisRemap() {
         try {
             // axis remap
-            byte AXIS_MAP_CONFIG_BYTE = 0b00100001; //swaps y-z, 0b00100001 is y-x, 0x6 is x-z
+            byte AXIS_MAP_CONFIG_BYTE = 0x6; //swaps y-z, 0b00100001 is y-x, 0x6 is x-z
             // uhh idk if this is the right thing
             byte AXIS_MAP_SIGN_BYTE = 0b000; //x, y, zv
 

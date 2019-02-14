@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import org.firstinspires.ftc.teamcode.Subsystems.Lift;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 //ur mom gae
-import static org.firstinspires.ftc.teamcode.Subsystems.Lift.MOTOR_CONFIG;
 
 @Config
 @TeleOp(name="SubsystemTest")

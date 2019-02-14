@@ -12,10 +12,13 @@ import com.qualcomm.robotcore.util.ThreadPool;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
 import org.firstinspires.ftc.teamcode.Utils.Hardware.CachingMotor;
+import org.firstinspires.ftc.teamcode.Utils.Misc.CSVWriter;
 import org.openftc.revextensions2.ExpansionHubEx;
 import org.openftc.revextensions2.RevExtensions2;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -35,11 +38,14 @@ public class Robot implements OpModeManagerNotifier.Notifications{
     private OpModeManagerImpl opModeManager;
 
 
+    private Map<Subsystem, CSVWriter> subsystemLogs;
 
     public interface Listener {
         void onPostUpdate();
     }
     private Telemetry telemetry;
+
+    private CSVWriter robotLog;
 
     private List<Subsystem> subsystems;
     private ExecutorService subsystemUpdateExecutor;
@@ -53,16 +59,22 @@ public class Robot implements OpModeManagerNotifier.Notifications{
     private Runnable subsystemUpdateRunnable = () -> {
         while (!Thread.currentThread().isInterrupted()) {
             try {
+                double startTime = System.currentTimeMillis();
                 TelemetryPacket packet = new TelemetryPacket();
                 for (Subsystem subsystem : subsystems) {
                     if (subsystem == null) continue;
                     Map<String, Object> telemetryData = subsystem.updateSubsystem(packet.fieldOverlay());
                     packet.putAll(telemetryData);
-
+                    CSVWriter log = subsystemLogs.get(subsystem);
+                    log.putAll(telemetryData);
+                    log.write();
                     // implement csv
                 }
                 updateMotors();
                 dashboard.sendTelemetryPacket(packet); // ftc dashboard is run in a seperate thread natively so we dont need to worry about that!
+                double endTIme = System.currentTimeMillis();
+                robotLog.put("SubsystemUpdateTime", endTIme - startTime);
+                robotLog.write();
             } catch (Throwable t) {
                 Log.wtf(TAG, t);
             }
@@ -71,10 +83,9 @@ public class Robot implements OpModeManagerNotifier.Notifications{
 
     private Runnable telemetryUpdateRunnable = () -> {
         while (!Thread.currentThread().isInterrupted()) {
-            try {
-                dashboard.sendTelemetryPacket(telemetryPacketQueue.take());
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+            for (CSVWriter log : subsystemLogs.values()) {
+                log.flush();
+                robotLog.flush();
             }
         }
 
@@ -84,6 +95,10 @@ public class Robot implements OpModeManagerNotifier.Notifications{
         this.telemetry = opMode.telemetry;
 
         RevExtensions2.init();
+
+        subsystemLogs = new HashMap<>();
+
+        robotLog = new CSVWriter(new File("Robot.csv"));
 
         telemetry.log().add("REV Extensions successfully initialized!");
         this.dashboard = FtcDashboard.getInstance();
@@ -95,13 +110,22 @@ public class Robot implements OpModeManagerNotifier.Notifications{
         try {
             drive = new MecanumDrive(this, opMode.hardwareMap);
             subsystems.add(drive);
+            subsystemLogs.put(drive, new CSVWriter(new File("MecanumDrive.csv")));
             telemetry.log().add("Mecanum Drive loaded successfully!");
         } catch (IllegalArgumentException e) {
             telemetry.log().add("Mecanum Drive init failed with: " + e.toString());
             allGood = false;
         }
 
-
+        try {
+            lift = new Lift(this, opMode.hardwareMap);
+            subsystems.add(lift);
+            subsystemLogs.put(drive, new CSVWriter(new File("Lift.csv")));
+            telemetry.log().add("Lift loaded successfully!");
+        } catch (IllegalArgumentException e) {
+            telemetry.log().add("LIft init failed with: " + e.toString());
+            allGood = false;
+        }
 
         //intake = new Intake(opMode.hardwareMap);
         //subsystems.add(intake);

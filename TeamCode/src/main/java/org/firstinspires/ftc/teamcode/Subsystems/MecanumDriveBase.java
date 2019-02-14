@@ -15,12 +15,10 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
 
 public abstract class MecanumDriveBase extends MecanumDrive {
-    //public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(0.035, 0, 0.03);
-    //public static PIDCoefficients HEADING_PID = new PIDCoefficients(0.43, 0, 0.001);
-    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(.035,0,0.001);
-    public static PIDCoefficients HEADING_PID = new PIDCoefficients(0.43,0,0.01); // gonna try with open loop
-    // public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(0.53, 0, 0.015);
-    // public static PIDCoefficients HEADING_PID = new PIDCoefficients(0.03, 0, 0.01);
+
+    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(0.01,0,0.01);
+    public static PIDCoefficients HEADING_PID = new PIDCoefficients(0.38,0,0.01); // gonna try with open loop
+
     private DriveConstraints constraints;
     private TrajectoryFollower follower;
     private Trajectory trajectory;

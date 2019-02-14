@@ -18,7 +18,7 @@ public class TurnTest extends LinearOpMode {
         MecanumDrive drive = robot.drive;
 
         Trajectory trajectory = drive.trajectoryBuilder()
-                .turnTo(Math.PI / 2)
+                .turnTo(-Math.PI / 2)
                 .build();
         robot.drive.setTrajectory(trajectory);
 

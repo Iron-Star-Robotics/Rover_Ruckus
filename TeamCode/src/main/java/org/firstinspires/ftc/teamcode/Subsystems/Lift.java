@@ -31,16 +31,38 @@ import java.util.Map;
 
 @Config
 public class Lift implements Subsystem {
-    HoldingMotor left, right;
+    CachingDcMotorEx liftMotor;
+    private static final int DELATCH_COUNT = 3600;
+    enum State {
+        STOP,
+        FOLLOWING,
+        HOLD
+    }
 
-    private static final double holdPower = 0.2;
+    private State state = State.STOP;
 
-    public Lift(HardwareMap hardwareMap) {
-        left = new HoldingMotor(hardwareMap.get(ExpansionHubMotor.class, "leftLift"), holdPower);
+    public Lift(Robot robot, HardwareMap hardwareMap) {
+        liftMotor = new CachingDcMotorEx(hardwareMap.get(ExpansionHubMotor.class, "liftMotor"));
+
+        robot.addMotor(liftMotor);
+    }
+
+    public void delatch() {
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        liftMotor.setTargetPosition(DELATCH_COUNT);
+        liftMotor.setPower(1.0);
+        state = State.FOLLOWING;
     }
 
     @Override
     public Map<String, Object> updateSubsystem(Canvas fieldOverlay) {
+        if (state == State.FOLLOWING) {
+            if (!liftMotor.isBusy()) {
+                liftMotor.setPower(0);
+                state = State.STOP;
+            }
+        }
         return new HashMap<>();
     }
 }

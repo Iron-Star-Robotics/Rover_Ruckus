@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import org.firstinspires.ftc.teamcode.Utils.Hardware.CachingDcMotorEx;
 import org.firstinspires.ftc.teamcode.Utils.Hardware.IMU;
+import org.firstinspires.ftc.teamcode.Utils.Misc.CSVWriter;
 import org.firstinspires.ftc.teamcode.Utils.Misc.DashboardUtil;
 import org.firstinspires.ftc.teamcode.Utils.Hardware.LynxOptimizedI2cFactory;
 import org.jetbrains.annotations.NotNull;
@@ -46,6 +47,8 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
     private Pose2d targetVelocity = new Pose2d(0,0,0);
     public static int ff = 0;
 
+    private List<String> motorNames = new ArrayList<>();
+
     private static final Vector2d[] wheelPositions = {
             new Vector2d(8,8),
             new Vector2d(-8, 8),
@@ -66,6 +69,8 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
 
     private PIDFController headingController;
 
+
+    private static final double TAU = Math.PI * 2;
 
     public MecanumDrive(Robot robot, HardwareMap hardwareMap) {
         super();
@@ -103,6 +108,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         }*/
 
         imu = new IMU(IMU.IMU_POS.VERTICAL, hub);
+        imu.init();
 
         leftFront = new CachingDcMotorEx(hardwareMap.get(ExpansionHubMotor.class, "fl"));
         leftRear = new CachingDcMotorEx(hardwareMap.get(ExpansionHubMotor.class, "bl"));
@@ -110,6 +116,11 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         rightFront = new CachingDcMotorEx(hardwareMap.get(ExpansionHubMotor.class, "fr"));
 
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
+
+        motorNames.add("fl");
+        motorNames.add("bl");
+        motorNames.add("br");
+        motorNames.add("fr");
 
         for (CachingDcMotorEx motor : motors) {
             // TODO: decide whether or not to use the built-in velocity PID
@@ -203,6 +214,11 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         telemetryData.put("yPos", currentPose.getY());
         telemetryData.put("heading",currentPose.getHeading());
 
+        for (int i = 0; i < motors.size(); i++) {
+            CachingDcMotorEx motor = motors.get(i);
+            telemetryData.put(motorNames.get(i) + "encoder counts", motor.getCurrentPosition());
+        }
+
         //internalSetVelocity(targetVelocity);
 
 
@@ -215,6 +231,10 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
 
     public void setTargetVelocity(Pose2d newVelo) {
         targetVelocity = newVelo;
+    }
+
+    public double getHeading() {
+        return imu.getAngle();
     }
     /*
 
@@ -244,20 +264,29 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         lastHeading = currHeading;
         return currHeading;
     }
-
+    */
     // set motor velocity in open loop control
-    public void setRVelocity(Pose2d target) {
-        double v = target.pos().norm();
-        v = Range.clip(v, -1, 1) * axialMaxV;
-        telemetry.log().add("Velo: " + v);
-        double theta = Math.atan2(target.getX(), target.getY());
-        //telemetry.log().add("theta: " + theta);
-        double omega = target.getHeading() * headingMaxV; // 5 is max heading velo
-        //telemetry.log().add("omega: " + omega);
-        targetVelocity = new Pose2d(v * Math.cos(theta), v * Math.sin(theta), omega); // determining the needed rotational velo
 
+
+    public void setRVelocity(Pose2d target) {
+        double controllerAngle = Math.atan2(target.getX(), target.getY());
+        double robotAngle = imu.getRawAngle();
+
+        double finalAngle = norm(robotAngle + controllerAngle);
+        targetVelocity = new Pose2d(target.getX(), target.getY(), finalAngle);
     }
 
+    private double norm(double angle) {
+        double newAngle = angle % TAU;
+
+        newAngle = (newAngle + TAU) % TAU;
+
+        if (newAngle > Math.PI)
+            newAngle -= TAU;
+
+        return newAngle;
+    }
+/*
     public void imuPIDTurn(double radians, double tolerance) {
         headingController.reset();
         headingController.setInputBounds(-Math.PI, Math.PI);
