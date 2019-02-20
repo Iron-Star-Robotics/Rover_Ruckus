@@ -8,7 +8,9 @@ import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerNotifier;
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -25,7 +27,7 @@ public class CSVWriter implements OpModeManagerNotifier.Notifications {
     public CSVWriter(File file) {
         map = new LinkedHashMap<>();
         try {
-            printStream = new PrintStream(file);
+            printStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)));
         } catch (IOException e) {
             e.printStackTrace();
         }

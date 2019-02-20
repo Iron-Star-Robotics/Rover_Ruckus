@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.Motion.DriveConstants;
 public abstract class MecanumDriveBase extends MecanumDrive {
 
     public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(0.01,0,0.01);
-    public static PIDCoefficients HEADING_PID = new PIDCoefficients(0.38,0,0.01); // gonna try with open loop
+    public static PIDCoefficients HEADING_PID = new PIDCoefficients(-0.01,0,0); // gonna try with open loop
 
     private DriveConstraints constraints;
     private TrajectoryFollower follower;

@@ -28,11 +28,13 @@ import org.openftc.revextensions2.ExpansionHubServo;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 @Config
 public class Lift implements Subsystem {
     CachingDcMotorEx liftMotor;
-    private static final int DELATCH_COUNT = 3600;
+    private static final int DELATCH_COUNT = 3400;
+    private static final int FAST_RESET_COUNT = 2800;
     enum State {
         STOP,
         FOLLOWING,
@@ -43,17 +45,37 @@ public class Lift implements Subsystem {
 
     public Lift(Robot robot, HardwareMap hardwareMap) {
         liftMotor = new CachingDcMotorEx(hardwareMap.get(ExpansionHubMotor.class, "liftMotor"));
-
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         robot.addMotor(liftMotor);
     }
 
     public void delatch() {
-        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         liftMotor.setTargetPosition(DELATCH_COUNT);
         liftMotor.setPower(1.0);
         state = State.FOLLOWING;
     }
+
+    public void lower() {
+        liftMotor.setTargetPosition(10);
+        liftMotor.setPower(-1.0);
+        state = State.FOLLOWING;
+    }
+
+    public void holdBlocking(int counts, Callable<Boolean> func) throws Exception {
+        liftMotor.setTargetPosition(counts);
+        liftMotor.setPower(.8);
+        while (!func.call()) {
+            while (liftMotor.isBusy());
+            liftMotor.setTargetPosition(counts);
+            liftMotor.setPower(.8);
+        }
+    }
+
+    public void holdAsync() {
+
+    }
+
 
     @Override
     public Map<String, Object> updateSubsystem(Canvas fieldOverlay) {

@@ -31,6 +31,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
     private FtcDashboard dashboard;
     private List<CachingMotor> motors;
 
+    private String logRoot = "/sdcard/FIRST/";
 
     public MecanumDrive drive;
     public Lift lift;
@@ -110,7 +111,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
         try {
             drive = new MecanumDrive(this, opMode.hardwareMap);
             subsystems.add(drive);
-            subsystemLogs.put(drive, new CSVWriter(new File("MecanumDrive.csv")));
+            subsystemLogs.put(drive, new CSVWriter(new File(logRoot,"MecanumDrive.csv")));
             telemetry.log().add("Mecanum Drive loaded successfully!");
         } catch (IllegalArgumentException e) {
             telemetry.log().add("Mecanum Drive init failed with: " + e.toString());
@@ -120,7 +121,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
         try {
             lift = new Lift(this, opMode.hardwareMap);
             subsystems.add(lift);
-            subsystemLogs.put(drive, new CSVWriter(new File("Lift.csv")));
+            subsystemLogs.put(lift, new CSVWriter(new File(logRoot, "Lift.csv")));
             telemetry.log().add("Lift loaded successfully!");
         } catch (IllegalArgumentException e) {
             telemetry.log().add("LIft init failed with: " + e.toString());

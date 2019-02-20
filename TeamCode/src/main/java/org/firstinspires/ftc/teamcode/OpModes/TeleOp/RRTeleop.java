@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.Utils.Misc.ExponentialSmoother;
@@ -25,8 +26,8 @@ public class RRTeleop extends LinearOpMode {
     public static final double LATERAL_SMOOTHING_COEFF = .7;
     public static final double TURN_SMOOTH_COEFF = .5;
 
-    DcMotorEx liftMotor;
-
+    DcMotorEx liftMotor, intakeMotor, collector;
+    Servo servo;
 
     Smoother smoother;
 
@@ -35,13 +36,18 @@ public class RRTeleop extends LinearOpMode {
     @Override
     public void runOpMode() {
        smoother = new Smoother();
-       smoother.setMode(Smoother.MODE.EXPONENTIAL);
+       smoother.setMode(Smoother.MODE.LINEAR);
 
         fieldCentric = false;
 
         robot = new Robot(this);
         robot.start();
         liftMotor = (DcMotorEx) hardwareMap.get(DcMotor.class, "liftMotor");
+        collector = (DcMotorEx) hardwareMap.get(DcMotor.class, "collector");
+        intakeMotor = (DcMotorEx) hardwareMap.get(DcMotor.class, "intake");
+        intakeMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        servo = hardwareMap.get(Servo.class, "flipIn");
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -68,8 +74,29 @@ public class RRTeleop extends LinearOpMode {
             telemetry.addData("Lift count: ", liftMotor.getCurrentPosition());
             telemetry.update();
             //telemetry.log().add("X: " + robot.drive.getTargetVelocity().getX() + " Y: " + robot.drive.getTargetVelocity().getY());
+
+            if (gamepad1.x)
+                intakeMotor.setPower(.6);
+            else if (gamepad1.b)
+                intakeMotor.setPower(-.6);
+            else
+                intakeMotor.setPower(0);
+
+            if (gamepad1.left_trigger > .5)
+                collector.setPower(1);
+            else if (gamepad1.right_trigger > .5)
+                collector.setPower(-1);
+            else
+                collector.setPower(0);
+
+            if (gamepad1.right_bumper)
+                servo.setPosition(.5);
+            else if (gamepad1.left_bumper)
+                servo.setPosition(0);
+
             long endTime = System.currentTimeMillis();
-            telemetry.addData("Loop Time (Hz):  ", 1 / ((endTime - startTime) / 1000));
+            double loopTimeHz =  1 / ((endTime - startTime) / 1000.0);
+            telemetry.addData("Loop Time (Hz):  ", loopTimeHz);
         }
 
 

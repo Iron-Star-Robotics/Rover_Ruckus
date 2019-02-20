@@ -233,6 +233,20 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         targetVelocity = newVelo;
     }
 
+    public void followFullTrajectory(Trajectory trajectory) {
+        setTrajectory(trajectory);
+        followTrajectory(trajectory);
+
+        while(isFollowingTrajectory());
+
+    }
+
+    public void followCompositeTrajectory(List<Trajectory> trajectories) {
+        for (Trajectory trajectory : trajectories)
+            followFullTrajectory(trajectory);
+    }
+
+
     public double getHeading() {
         return imu.getAngle();
     }
@@ -322,6 +336,7 @@ public class MecanumDrive extends MecanumDriveBase implements Subsystem {
         Trajectory trajectory = trajectoryBuilder().turnTo(radians).build();
         setTrajectory(trajectory);
         followTrajectory(trajectory);
+        while (isFollowingTrajectory());
     }
 
     public void forward(double distance) {

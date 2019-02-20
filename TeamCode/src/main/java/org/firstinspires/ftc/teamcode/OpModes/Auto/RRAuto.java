@@ -11,7 +11,9 @@ import com.disnodeteam.dogecv.DogeCV;
 import com.disnodeteam.dogecv.detectors.roverrukus.GoldAlignDetector;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ThreadPool;
 
@@ -20,6 +22,7 @@ import org.firstinspires.ftc.teamcode.Motion.Paths;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.Vision.VisionService;
 import org.opencv.core.Mat;
+import org.openftc.revextensions2.ExpansionHubMotor;
 
 import java.util.concurrent.ExecutorService;
 import java.util.zip.GZIPOutputStream;
@@ -29,16 +32,22 @@ public abstract class RRAuto extends LinearOpMode {
     protected Robot robot;
     protected GoldAlignDetector detector;
 
+    protected enum GoldPos {
+        LEFT,
+        MIDDLE,
+        RIGHT
+    }
 
-    private VisionService.GoldPos goldPos;
-
-    VisionService visionService;
-    double imageOffset = 50;
-    public static double turnDeg = 20;
-    public static double strafeDist = 10;
-    public static double forwardDist = 20;
+    protected enum Location {
+        DEPOT,
+        CRATER
+    }
 
     Servo servo;
+
+    protected GoldPos goldPos;
+
+    DcMotorEx liftMotor;
 
     protected void init(boolean vision) {
 
@@ -47,6 +56,18 @@ public abstract class RRAuto extends LinearOpMode {
         //robot.lift.raise();
 
         //robot.lift.delatch();
+        liftMotor = hardwareMap.get(ExpansionHubMotor.class, "liftMotor");
+        liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        liftMotor.setTargetPosition(10);
+        liftMotor.setPower(.8);
+        while (!isStarted() && opModeIsActive()) {
+            while (liftMotor.isBusy());
+            liftMotor.setTargetPosition(10);
+            liftMotor.setPower(.8);
+        }
+
 
         if (vision) {
             detector = new GoldAlignDetector();
@@ -70,93 +91,43 @@ public abstract class RRAuto extends LinearOpMode {
 
 
         robot.start();
+        robot.drive.setBias(getBias());
     }
 
     public void sample() {
 
-
-       // goldPos = visionService.getGoldLocation();
-        //visionService.stop();
-        String goldDisplay;
-        if (detector.getAligned()) {
-            goldPos = VisionService.GoldPos.CENTER;
-            goldDisplay = "Center";
-            Trajectory trajectory = centerTrajectory();
-            robot.drive.setTrajectory(trajectory);
-            robot.drive.followTrajectory(trajectory);
-            while (opModeIsActive() && robot.drive.isFollowingTrajectory()) {
-
-            }
-            telemetry.log().add("Gold pos: " + goldDisplay);
-        }
-        else if (detector.isFound() && !detector.getAligned()) {
-            goldPos = VisionService.GoldPos.LEFT;
-            goldDisplay = "Left";
-            Trajectory trajectory = leftSampleTrajectory();
-            robot.drive.setTrajectory(trajectory);
-            robot.drive.followTrajectory(trajectory);
-
-            while (opModeIsActive() && robot.drive.isFollowingTrajectory()) {
-
-            }
-            telemetry.log().add("Gold pos: " + goldDisplay);
-
-        }
-        else {
-            goldPos = VisionService.GoldPos.RIGHT;
-            goldDisplay = "Right";
-            Trajectory trajectory = rightSampleTrajectory();
-            robot.drive.setTrajectory(trajectory);
-            robot.drive.followTrajectory(trajectory);
-            while (opModeIsActive() && robot.drive.isFollowingTrajectory()) {
-
-            }
-            telemetry.log().add("Gold pos: " + goldDisplay);
-
-        }
-
-        sleep(200);
-
-        telemetry.log().add("Gold pos: " + goldDisplay);
-        detector.disable();
-
-        robot.drive.setBias(Math.PI / 4);
+       // robot.drive.followFullTrajectory(Paths.centerDepotSample());
+        if (detector.getAligned())
+            goldPos = GoldPos.MIDDLE;
+        else if (detector.isFound())
+            goldPos = GoldPos.LEFT;
+        else
+            goldPos = GoldPos.RIGHT;
 
     }
 
-    public Trajectory rightSampleTrajectory() {
-        return robot.drive.trajectoryBuilder(new Pose2d(14.183, 14.183, Math.PI / 4))
-                .strafeTo(new Vector2d(10.566,17.8))
-                .waitFor(1)
-                .turnTo(0)
-                .build();
+    public void delatch() {
+        liftMotor.setPower(0);
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        liftMotor.setTargetPosition(3400);
+        liftMotor.setPower(1);
+
+        while(liftMotor.isBusy());
+        liftMotor.setPower(0);
+
+        robot.drive.followFullTrajectory(Paths.unhookDepot());
+
+        liftMotor.setTargetPosition(2000);
+        liftMotor.setPower(1);
+        while (liftMotor.isBusy());
+        liftMotor.setPower(0);
+        robot.drive.turnTo(Math.toDegrees(3 * Math.PI / 4));
+
     }
 
-    public Trajectory leftSampleTrajectory() {
-        return robot.drive.trajectoryBuilder(new Pose2d(14.183, 14.183, Math.PI / 4))
-                .strafeLeft(7)
-                .waitFor(1)
-                .turnTo(Math.toRadians(65))
-                .waitFor(1)
-                .lineTo(new Vector2d(25,45), new ConstantInterpolator(Math.toRadians(65)))
-                .waitFor(1)
-                .back(10)
-                .waitFor(1)
-                .turnTo(Math.toRadians(135))
-                .build();
-    }
 
-    public Trajectory centerTrajectory() {
-        return robot.drive.trajectoryBuilder(new Pose2d(14.183, 14.183, Math.PI / 4))
-                .strafeLeft(7)
-                .waitFor(1)
-                .lineTo(new Vector2d(33,33), new ConstantInterpolator(Math.PI / 4))
-                .waitFor(1)
-                .lineTo(new Vector2d(24,24), new ConstantInterpolator(Math.PI / 4))
-                .waitFor(1)
-                .turnTo(Math.toRadians(125))
-                .build();
-    }
-
+    public abstract double getBias();
+    public abstract Location getLocation();
     public abstract void runOpMode();
 }
