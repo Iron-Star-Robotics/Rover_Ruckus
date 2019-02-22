@@ -45,7 +45,7 @@ public abstract class RRAuto extends LinearOpMode {
 
     Servo servo;
 
-    protected GoldPos goldPos;
+    protected GoldPos goldPos = null;
 
     DcMotorEx liftMotor;
 
@@ -111,18 +111,21 @@ public abstract class RRAuto extends LinearOpMode {
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         liftMotor.setTargetPosition(3400);
-        liftMotor.setPower(1);
+        liftMotor.setPower(1); // ik these calls r blocking but in this case I want to wait until they finish before performing any subsequent actions
 
         while(liftMotor.isBusy());
         liftMotor.setPower(0);
 
-        robot.drive.followFullTrajectory(Paths.unhookDepot());
+        if (getLocation() == Location.DEPOT)
+            robot.drive.followFullTrajectory(Paths.unhookDepot());
+        else
+            robot.drive.followFullTrajectory(Paths.unhookLander());
 
         liftMotor.setTargetPosition(2000);
         liftMotor.setPower(1);
         while (liftMotor.isBusy());
         liftMotor.setPower(0);
-        robot.drive.turnTo(Math.toDegrees(3 * Math.PI / 4));
+        robot.drive.turnTo(Math.toDegrees(getBias()));
 
     }
 

@@ -17,6 +17,8 @@ public class SubsystemTest extends LinearOpMode {
     Robot robot;
     public static double motorPower = 0.7;
     public static int encoderCts = 750;
+
+
     @Override
     public void runOpMode() {
         robot = new Robot(this);

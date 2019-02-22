@@ -26,16 +26,18 @@ import java.util.Map;
 @Config
 public class Intake implements Subsystem {
     CachingDcMotorEx flipper, intake;
-    CRServo servo;
+    CRServo collector;
 
     public static int extendTicks = 1000;
+    public static int flipTicks = 10;
+    private boolean needsFlip, flippedOut = false;
 
     public Intake(Robot robot, HardwareMap map) {
         flipper = new CachingDcMotorEx(map.get(ExpansionHubMotor.class, "flipper"));
         MotorUtils.runToPosMotorInit(flipper);
         intake = new CachingDcMotorEx(map.get(ExpansionHubMotor.class, "intake"));
         MotorUtils.runToPosMotorInit(intake);
-        servo = (CRServo) map.get(Servo.class, "collector");
+        collector = map.get(CRServo.class, "collector");
     }
 
     @Override
@@ -43,14 +45,30 @@ public class Intake implements Subsystem {
         Map<String, Object> telemetry = new HashMap<>();
         telemetry.put("Intake state", "lol");
         return telemetry;
+
     }
 
+    public void collect() {
+        collector.setPower(1);
+    }
 
+    public void spit() {
+        collector.setPower(-1);
+    }
 
+    public void extend() {
+        intake.setTargetPosition(extendTicks);
+        intake.setPower(.4);
+        flipper.setTargetPosition(flipTicks);
+        flipper.setPower(.7);
+    }
 
-
-
-
-
+    public void retract() {
+        intake.setTargetPosition(10);
+        intake.setPower(.4);
+        needsFlip = true;
+        flipper.setTargetPosition(0);
+        flipper.setPower(.7);
+    }
 
 }

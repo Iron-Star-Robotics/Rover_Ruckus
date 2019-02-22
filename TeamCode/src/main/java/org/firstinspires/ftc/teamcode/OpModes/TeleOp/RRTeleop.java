@@ -5,6 +5,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -26,9 +27,9 @@ public class RRTeleop extends LinearOpMode {
     public static final double LATERAL_SMOOTHING_COEFF = .7;
     public static final double TURN_SMOOTH_COEFF = .5;
 
-    DcMotorEx liftMotor, intakeMotor, collector;
-    Servo servo;
-
+    DcMotorEx liftMotor, intake, flipper, lift;
+    CRServo servo;
+    Servo scoreOWO;
     Smoother smoother;
 
     boolean fieldCentric;
@@ -43,15 +44,25 @@ public class RRTeleop extends LinearOpMode {
         robot = new Robot(this);
         robot.start();
         liftMotor = (DcMotorEx) hardwareMap.get(DcMotor.class, "liftMotor");
-        collector = (DcMotorEx) hardwareMap.get(DcMotor.class, "collector");
-        intakeMotor = (DcMotorEx) hardwareMap.get(DcMotor.class, "intake");
-        intakeMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        servo = hardwareMap.get(Servo.class, "flipIn");
+        flipper = (DcMotorEx) hardwareMap.get(DcMotor.class, "flipper");
+        intake = (DcMotorEx) hardwareMap.get(DcMotor.class, "intake");
+        scoreOWO = hardwareMap.get(Servo.class, "scorer");
+        intake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        lift = (DcMotorEx) hardwareMap.get(DcMotor.class, "lift");
+        lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        flipper.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        flipper.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        servo = hardwareMap.get(CRServo.class, "collector");
 
         waitForStart();
         while (opModeIsActive()) {
@@ -59,7 +70,7 @@ public class RRTeleop extends LinearOpMode {
             Pose2d controllerPose = new Pose2d(
                     -gamepad1.left_stick_y,
                     -gamepad1.left_stick_x,
-                    -gamepad1.right_stick_x
+                    -gamepad1.right_stick_x * .75
             );
 
             robot.drive.setTargetVelocity(smoother.transform(controllerPose));
@@ -76,36 +87,50 @@ public class RRTeleop extends LinearOpMode {
             //telemetry.log().add("X: " + robot.drive.getTargetVelocity().getX() + " Y: " + robot.drive.getTargetVelocity().getY());
 
             if (gamepad1.x)
-                intakeMotor.setPower(.6);
+                intake.setPower(.2);
             else if (gamepad1.b)
-                intakeMotor.setPower(-.6);
+                intake.setPower(-.2);
             else
-                intakeMotor.setPower(0);
+                intake.setPower(0);
+            if (gamepad1.right_trigger > .2) {
+                flipper.setPower(.7);
+            } else if (gamepad1.left_trigger > .2)
+                flipper.setPower(-.7);
+            else
+                flipper.setPower(0);
 
-            if (gamepad1.left_trigger > .5)
-                collector.setPower(1);
-            else if (gamepad1.right_trigger > .5)
-                collector.setPower(-1);
-            else
-                collector.setPower(0);
 
             if (gamepad1.right_bumper)
-                servo.setPosition(.5);
+                lift.setPower(.2);
             else if (gamepad1.left_bumper)
-                servo.setPosition(0);
+                lift.setPower(-.2);
+            else
+                lift.setPower(0);
+            if (gamepad1.dpad_up)
+                servo.setPower(1);
+            else if (gamepad1.dpad_down)
+                servo.setPower(-.1);
+            else
+                servo.setPower(0);
+
+            if (gamepad1.dpad_left) {
+                scoreOWO.setPosition(1);
+            } else if (gamepad1.dpad_right)
+                scoreOWO.setPosition(.2);
+
+
+            telemetry.addData("intake counts: ", intake.getCurrentPosition());
+            telemetry.addData("flipper counts: ", flipper.getCurrentPosition());
+            telemetry.addData("score lift counts: ", lift.getCurrentPosition());
+
 
             long endTime = System.currentTimeMillis();
-            double loopTimeHz =  1 / ((endTime - startTime) / 1000.0);
+            double loopTimeHz = 1000.0 / (endTime - startTime);
             telemetry.addData("Loop Time (Hz):  ", loopTimeHz);
+            telemetry.update();
         }
 
 
-    }
-
-    public double scalePowers(double power) {
-        double sinPower = Math.sin(power * Math.PI / 2);
-        if (gamepad2.left_bumper) return ENDGAME_DAMPER * sinPower;
-        return NORMAL_DAMPER * sinPower;
     }
 
     public void setFieldCentric() {

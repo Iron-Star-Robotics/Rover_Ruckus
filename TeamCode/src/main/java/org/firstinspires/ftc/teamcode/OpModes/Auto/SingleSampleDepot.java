@@ -26,6 +26,8 @@ public class SingleSampleDepot extends RRAuto {
         else
             robot.drive.followFullTrajectory(Paths.rightDepotSample());
 
+        // extend intake and deposit, then retract then do the rest of the stuff
+
         Trajectory trajectory = robot.drive.trajectoryBuilder()
                 .turnTo(4 * Math.PI / 3)
                 .build();

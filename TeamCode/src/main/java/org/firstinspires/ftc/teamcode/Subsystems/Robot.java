@@ -35,6 +35,7 @@ public class Robot implements OpModeManagerNotifier.Notifications{
 
     public MecanumDrive drive;
     public Lift lift;
+    public Intake intake;
     // TODO: intake, conveyor belt, lander scorer
     private OpModeManagerImpl opModeManager;
 
@@ -121,10 +122,20 @@ public class Robot implements OpModeManagerNotifier.Notifications{
         try {
             lift = new Lift(this, opMode.hardwareMap);
             subsystems.add(lift);
-            subsystemLogs.put(lift, new CSVWriter(new File(logRoot, "Lift.csv")));
+            subsystemLogs.put(drive, new CSVWriter(new File(logRoot,"MecanumDrive.csv")));
             telemetry.log().add("Lift loaded successfully!");
         } catch (IllegalArgumentException e) {
-            telemetry.log().add("LIft init failed with: " + e.toString());
+            telemetry.log().add("Lift init failed with: " + e.toString());
+            allGood = false;
+        }
+
+        try {
+            intake = new Intake(this, opMode.hardwareMap);
+            subsystems.add(intake);
+            subsystemLogs.put(intake, new CSVWriter(new File(logRoot,"MecanumDrive.csv")));
+            telemetry.log().add("Lift loaded successfully!");
+        } catch (IllegalArgumentException e) {
+            telemetry.log().add("Intake init failed with: " + e.toString());
             allGood = false;
         }
 
